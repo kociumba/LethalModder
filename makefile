@@ -2,7 +2,7 @@ all: b
 
 b: generate
 	go mod tidy
-	go build -o ./build -tags fastjson
+	go build -o ./build
 
 r: generate
 	@if [ -z "$(system)" ]; then \
@@ -21,7 +21,7 @@ run: b
 	./build/lethalmodder $(var)
 
 clean: 
-	rm -rf ./build/* || true
+	find ./build/ -maxdepth 1 ! -name "README.md" -type f -exec rm -rf {} +
 
 generate:
 	go run github.com/tc-hib/go-winres@latest make --product-version=git-tag --file-version=git-tag

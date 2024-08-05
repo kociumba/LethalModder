@@ -81,29 +81,27 @@ func main() {
 			os.Exit(0)
 		}
 
-		// fmt.Printf("Successfully parsed %d package listings\n", len(packageListings))
-		// for i, listing := range packageListings {
-		// 	ratingScore, _ := listing.GetRatingScore()
-		// 	isPinned, _ := listing.GetIsPinned()
-		// 	categories, _ := listing.GetCategories()
-		// 	fmt.Printf("%d: Name: %s, Owner: %s, Rating: %d, IsPinned: %v, Categories: %v\n",
-		// 		i+1, listing.Name, listing.Owner, ratingScore, isPinned, categories)
-		// 	if i >= 9 { // Print only first 10 for brevity
-		// 		fmt.Println("...")
-		// 		break
-		// 	}
-		// }
+		log.Debugf("Successfully parsed %d package listings\n", len(packageListings))
+		for i, listing := range packageListings {
+			ratingScore, _ := listing.GetRatingScore()
+			isPinned, _ := listing.GetIsPinned()
+			categories, _ := listing.GetCategories()
+			log.Debugf("%d: Name: %s, Owner: %s, Rating: %d, IsPinned: %v, Categories: %v\n",
+				i+1, listing.Name, listing.Owner, ratingScore, isPinned, categories)
+			if i >= 9 { // Print only first 10 for brevity
+				break
+			}
+		}
 
 		items := make([]list.Item, 0)
 		for _, listing := range packageListings {
 			isDeprecated, _ := listing.GetIsDeprecated()
 			if !isDeprecated {
-				categoriesStr := ""
-				if categories, ok := listing.Categories.(string); ok {
-					categoriesStr = categories
+				rating, err := listing.GetRatingScore()
+				if err != nil {
+					log.Errorf("Error getting rating score: %v", err)
 				}
-
-				items = append(items, item{title: listing.Name, desc: listing.Owner + " - " + categoriesStr})
+				items = append(items, item{title: listing.Name, desc: "Owner: " + listing.Owner + " - " + fmt.Sprint(rating) + "☆"})
 			}
 		}
 
