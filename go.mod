@@ -3,6 +3,7 @@ module github.com/kociumba/LethalModder
 go 1.22.5
 
 require (
+	github.com/andygrunwald/vdf v1.1.0
 	github.com/charmbracelet/bubbletea v0.26.6
 	github.com/charmbracelet/huh/spinner v0.0.0-20240803000013-2eb851f67645
 )
@@ -36,6 +37,6 @@ require (
 	github.com/valyala/fastjson v1.6.4
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.22.0
 	golang.org/x/text v0.16.0 // indirect
 )

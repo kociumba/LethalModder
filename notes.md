@@ -48,3 +48,7 @@ flowchart TD;
 ```
 
 This is mostly the same as r2modman but I can't think of a better way especcially in a TUI.
+
+### Platform support
+
+Windows is primary linux will be supported later because Lethal Company doesn't even have a native linux build.

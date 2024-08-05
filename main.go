@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,13 +12,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/kociumba/LethalModder/api"
+	"github.com/kociumba/LethalModder/steam"
 )
 
 var (
 	docStyle = lipgloss.NewStyle().Margin(1, 2)
 	err      error
 	p        *tea.Program
-	finished = make(chan struct{})
+	M        model
 
 	dbg   = flag.Bool("dbg", false, "enable debug logging")
 	print = flag.Bool("print", false, "print to stdout")
@@ -66,54 +68,19 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	// This is fucking 182mb
-	// wtf were they smoking
+	// Need to make sure all of this is loaded before showing output
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+
 	go func() {
-		packageListings, err := api.GetMods()
-		if err != nil {
-			log.Fatalf("Error getting mods: %v", err)
-		}
+		defer wg.Done()
+		initMods()
 
-		if *print {
-			for _, listing := range packageListings {
-				fmt.Println(listing)
-			}
-			os.Exit(0)
-		}
+	}()
 
-		log.Debugf("Successfully parsed %d package listings\n", len(packageListings))
-		for i, listing := range packageListings {
-			ratingScore, _ := listing.GetRatingScore()
-			isPinned, _ := listing.GetIsPinned()
-			categories, _ := listing.GetCategories()
-			log.Debugf("%d: Name: %s, Owner: %s, Rating: %d, IsPinned: %v, Categories: %v\n",
-				i+1, listing.Name, listing.Owner, ratingScore, isPinned, categories)
-			if i >= 9 { // Print only first 10 for brevity
-				break
-			}
-		}
-
-		items := make([]list.Item, 0)
-		for _, listing := range packageListings {
-			isDeprecated, _ := listing.GetIsDeprecated()
-			if !isDeprecated {
-				rating, err := listing.GetRatingScore()
-				if err != nil {
-					log.Errorf("Error getting rating score: %v", err)
-				}
-				items = append(items, item{title: listing.Name, desc: "Owner: " + listing.Owner + " - " + fmt.Sprint(rating) + "☆"})
-			}
-		}
-
-		m := model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
-		m.list.Title = "Mods"
-
-		p = tea.NewProgram(m, tea.WithAltScreen())
-
-		// Program is ready
-		// Should stop
-
-		finished <- struct{}{}
+	go func() {
+		defer wg.Done()
+		initLocalProfiles()
 	}()
 
 	err = spinner.New().Title("Loading mods...").Run()
@@ -121,10 +88,72 @@ func main() {
 		log.Fatalf("Error starting spinner: %v", err)
 	}
 
-	<-finished
+	wg.Wait()
+
+	// huh.NewSelect[int]().Run()
+
+	// don't wanna render the 20k mods when testing
+	if *dbg {
+		os.Exit(0)
+	}
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
+}
+
+// This is fucking 182mb
+// wtf were they smoking
+func initMods() {
+	packageListings, err := api.GetMods()
+	if err != nil {
+		log.Fatalf("Error getting mods: %v", err)
+	}
+
+	if *print {
+		for _, listing := range packageListings {
+			fmt.Println(listing)
+		}
+		os.Exit(0)
+	}
+
+	log.Debugf("Successfully parsed %d package listings\n", len(packageListings))
+	// for i, listing := range packageListings {
+	// 	ratingScore, _ := listing.GetRatingScore()
+	// 	log.Debugf("%d: Name: %s, Owner: %s, Rating: %d, Link: %s",
+	// 		i+1, listing.Name, listing.Owner, ratingScore, listing.PackageURL)
+	// 	if i >= 9 { // Print only first 10 for brevity
+	// 		break
+	// 	}
+	// }
+
+	items := make([]list.Item, 0)
+	for _, listing := range packageListings {
+		isDeprecated, _ := listing.GetIsDeprecated()
+		if !isDeprecated {
+			rating, err := listing.GetRatingScore()
+			if err != nil {
+				log.Errorf("Error getting rating score: %v", err)
+			}
+			items = append(items, item{title: listing.Name, desc: "Owner: " + listing.Owner + " - " + fmt.Sprint(rating) + "☆"})
+		}
+	}
+
+	M = model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+	M.list.Title = "Mods"
+
+	p = tea.NewProgram(M, tea.WithAltScreen())
+}
+
+func initLocalProfiles() {
+	steam, game, err := steam.FindSteam()
+	if err != nil {
+		log.Fatalf("Error finding steam: %v", err)
+	}
+	log.Debugf("Steam path: %s, Lethal Company path: %s\n", steam, game)
+
+	// Download bepinex from url
+	// api.Download("https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/", "bepinex.zip")
+
 }
