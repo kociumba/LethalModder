@@ -36,7 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: SkyDriver-${{ matrix.build.name }}
+          name: LethalModder-${{ matrix.build.name }}
           path: ./build/LethalModder-${{ matrix.build.name }}*
 
   Release:
