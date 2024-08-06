@@ -1,67 +1,68 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"os"
 	"sync"
 
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh/spinner"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
+
 	"github.com/kociumba/LethalModder/api"
 	"github.com/kociumba/LethalModder/steam"
 )
 
+//go:embed all:frontend/dist
+var assets embed.FS
+
 var (
-	docStyle = lipgloss.NewStyle().Margin(1, 2)
-	err      error
-	p        *tea.Program
-	M        model
+	err             error
+	packageListings []api.PackageListing
 
 	dbg   = flag.Bool("dbg", false, "enable debug logging")
 	print = flag.Bool("print", false, "print to stdout")
 )
 
-type item struct {
-	title, desc string
-}
-
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
-
-type model struct {
-	list list.Model
-}
-
-func (m model) Init() tea.Cmd {
-	return nil
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" {
-			return m, tea.Quit
-		}
-	case tea.WindowSizeMsg:
-		h, v := docStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-h, msg.Height-v)
-	}
-
-	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
-	return m, cmd
-}
-
-func (m model) View() string {
-	return docStyle.Render(m.list.View())
-}
-
 func main() {
+	// Create an instance of the app structure
+	app := NewApp()
+
+	// Init the mod data
+	InitData()
+
+	// Create application with options
+	err := wails.Run(&options.App{
+		Title:  "LethalModder",
+		Width:  1600,
+		Height: 900,
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
+		OnStartup:        app.startup,
+		Bind: []interface{}{
+			app,
+		},
+		CSSDragProperty: "--wails-draggable",
+		CSSDragValue:    "drag",
+		Windows: &windows.Options{
+			WebviewIsTransparent: false,
+			WindowIsTranslucent:  false,
+			BackdropType:         windows.Mica,
+		},
+	})
+
+	if err != nil {
+		log.Fatal("Error:", err.Error())
+	}
+}
+
+func InitData() {
 	flag.Parse()
 	log.SetReportCaller(true)
 	if *dbg {
@@ -83,10 +84,10 @@ func main() {
 		initLocalProfiles()
 	}()
 
-	err = spinner.New().Title("Loading mods...").Run()
-	if err != nil {
-		log.Fatalf("Error starting spinner: %v", err)
-	}
+	// err = spinner.New().Title("Loading mods...").Run()
+	// if err != nil {
+	// 	log.Fatalf("Error starting spinner: %v", err)
+	// }
 
 	wg.Wait()
 
@@ -97,16 +98,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	if _, err := p.Run(); err != nil {
-		fmt.Println("Error running program:", err)
-		os.Exit(1)
-	}
 }
 
 // This is fucking 182mb
 // wtf were they smoking
+//
+// This is gonna have to init like smt like:
+//
+//	cfg.Mods{}
 func initMods() {
-	packageListings, err := api.GetMods()
+	packageListings, err = api.GetMods()
 	if err != nil {
 		log.Fatalf("Error getting mods: %v", err)
 	}
@@ -128,22 +129,19 @@ func initMods() {
 	// 	}
 	// }
 
-	items := make([]list.Item, 0)
-	for _, listing := range packageListings {
-		isDeprecated, _ := listing.GetIsDeprecated()
-		if !isDeprecated {
-			rating, err := listing.GetRatingScore()
-			if err != nil {
-				log.Errorf("Error getting rating score: %v", err)
-			}
-			items = append(items, item{title: listing.Name, desc: "Owner: " + listing.Owner + " - " + fmt.Sprint(rating) + "☆"})
-		}
-	}
-
-	M = model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
-	M.list.Title = "Mods"
-
-	p = tea.NewProgram(M, tea.WithAltScreen())
+	// Change this to a config struct or someting
+	//
+	// items := make([]list.Item, 0)
+	// for _, listing := range packageListings {
+	// 	isDeprecated, _ := listing.GetIsDeprecated()
+	// 	if !isDeprecated {
+	// 		rating, err := listing.GetRatingScore()
+	// 		if err != nil {
+	// 			log.Errorf("Error getting rating score: %v", err)
+	// 		}
+	// 		items = append(items, item{title: listing.Name, desc: "Owner: " + listing.Owner + " - " + fmt.Sprint(rating) + "☆"})
+	// 	}
+	// }
 }
 
 func initLocalProfiles() {

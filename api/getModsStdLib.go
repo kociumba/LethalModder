@@ -26,7 +26,24 @@ type PackageListing struct {
 	IsDeprecated   interface{} `json:"is_deprecated"`
 	HasNSFWContent bool        `json:"has_nsfw_content"`
 	Categories     interface{} `json:"categories"`
-	Versions       interface{} `json:"versions"`
+	Versions       []Version   `json:"versions"`
+}
+
+// Version represents the structure of a version listing
+type Version struct {
+	DateCreated   string   `json:"date_created"`
+	Dependencies  []string `json:"dependencies"`
+	Description   string   `json:"description"`
+	DownloadURL   string   `json:"download_url"`
+	Downloads     int      `json:"downloads"`
+	FileSize      int      `json:"file_size"`
+	FullName      string   `json:"full_name"`
+	Icon          string   `json:"icon"`
+	IsActive      bool     `json:"is_active"`
+	Name          string   `json:"name"`
+	UUID4         string   `json:"uuid4"`
+	VersionNumber string   `json:"version_number"`
+	WebsiteURL    string   `json:"website_url"`
 }
 
 func (p *PackageListing) UnmarshalJSON(data []byte) error {

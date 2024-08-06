@@ -47,7 +47,7 @@ flowchart TD;
 
 ```
 
-This is mostly the same as r2modman but I can't think of a better way especcially in a TUI.
+This is mostly the same as r2modman but I can't think of a better way.
 
 ### Platform support
 

@@ -24,4 +24,9 @@ go.work
 /out.txt
 rsrc_windows_386.syso
 rsrc_windows_amd64.syso
+/makefile
 
+# wails
+build/bin
+node_modules
+frontend/dist
