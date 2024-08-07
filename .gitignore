@@ -25,6 +25,7 @@ go.work
 rsrc_windows_386.syso
 rsrc_windows_amd64.syso
 /makefile
+*.bak
 
 # wails
 build/bin

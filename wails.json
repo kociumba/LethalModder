@@ -6,8 +6,13 @@
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
+  "appargs": "-dbg",
   "author": {
     "name": "kociumba",
     "email": "79542688+kociumba@users.noreply.github.com"
+  },
+  "info": {
+    "productName": "LethalModder",
+    "comments": "gabagool"
   }
 }

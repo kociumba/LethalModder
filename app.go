@@ -10,10 +10,28 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/kociumba/LethalModder/api"
 )
 
 const itemsPerPage = 10
+
+type Direction int
+
+const (
+	Next Direction = iota
+	Previous
+)
+
+// Used to make sure webview2 bridge doesn't get overloaded.
+//
+// Has to be json tagged to translate into JS
+type SimplePackageListing struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+	DownloadURL string `json:"download_url"`
+}
 
 // App struct
 type App struct {
@@ -31,59 +49,74 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) Return10Listings(currentIndex, direction int) []api.PackageListing {
-	totalItems := len(packageListings)
-
-	// Handle out of bounds
-	if currentIndex < 0 {
-		currentIndex = 0
-	} else if currentIndex >= totalItems {
-		currentIndex = totalItems - itemsPerPage
-		if currentIndex < 0 {
-			currentIndex = 0
-		}
-	}
-
-	var listings []api.PackageListing
-	if direction > 0 {
-		endIndex := currentIndex + itemsPerPage
-		if endIndex > totalItems {
-			endIndex = totalItems
-		}
-		listings = packageListings[currentIndex:endIndex]
+func (a *App) Return10Simple(currentIndex int, direction Direction) []SimplePackageListing {
+	var start, end int
+	if direction == Next {
+		start = currentIndex
+		end = currentIndex + itemsPerPage
 	} else {
-		startIndex := currentIndex - itemsPerPage
-		if startIndex < 0 {
-			startIndex = 0
-		}
-		listings = packageListings[startIndex:currentIndex]
+		start = currentIndex - itemsPerPage
+		end = currentIndex
 	}
 
-	return listings
+	// Ensure start and end are within valid bounds
+	if start < 0 {
+		start = 0
+	}
+	if end > len(packageListings) {
+		end = len(packageListings)
+	}
+	if start > len(packageListings) {
+		start = len(packageListings)
+	}
+
+	subset := packageListings[start:end]
+	simplifiedSubset := make([]SimplePackageListing, len(subset))
+	for i, listing := range subset {
+		simplifiedSubset[i] = SimplePackageListing{
+			Name:        listing.Name,
+			Description: listing.Versions[0].Description,
+			URL:         listing.PackageURL,
+			DownloadURL: listing.Versions[0].DownloadURL,
+		}
+	}
+
+	return simplifiedSubset
+}
+
+// Turns out the data is so big even on 10 entries that it crashed webview2 bridge
+//
+// # Do not use from frontend, results in a stack overflow
+func (a *App) Return10Listings(currentIndex int, direction Direction) []api.PackageListing {
+	var start, end int
+	if direction == Next {
+		start = currentIndex
+		end = currentIndex + itemsPerPage
+	} else {
+		start = currentIndex - itemsPerPage
+		end = currentIndex
+	}
+
+	// Ensure start and end are within valid bounds
+	if start < 0 {
+		start = 0
+	}
+	if end > len(packageListings) {
+		end = len(packageListings)
+	}
+	if start > len(packageListings) {
+		start = len(packageListings)
+	}
+
+	log.Info(packageListings[start:end])
+	return packageListings[start:end]
 }
 
 func (a *App) GetTotalItems() int {
+	log.Info(len(packageListings))
+
 	return len(packageListings)
 }
-
-// func (a *App) OpenWebsite(url string) {
-// 	// Open a website in the system default browser
-// 	var cmd string
-// 	var args []string
-
-// 	switch runtime.GOOS {
-// 	case "windows":
-// 		cmd = "cmd"
-// 		args = []string{"/c", "start"}
-// 	case "darwin":
-// 		cmd = "open"
-// 	default: // "linux", "freebsd", "openbsd", "netbsd"
-// 		cmd = "xdg-open"
-// 	}
-
-// 	args = append(args, url)
-// 	exec.Command(cmd, args...).Start()
-// }
 
 func (a *App) Download(url string) (string, error) {
 	fileURL := url
@@ -183,6 +216,7 @@ func extractZip(src, dest string) error {
 }
 
 // [0] is the newest
+// Deprecated as I already return this in the simplified package listing
 func (a *App) GetDownloadURL(listing api.PackageListing) string {
 	return listing.Versions[0].DownloadURL
 }

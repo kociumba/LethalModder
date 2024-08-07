@@ -17,3 +17,7 @@ export function GetTotalItems() {
 export function Return10Listings(arg1, arg2) {
   return window['go']['main']['App']['Return10Listings'](arg1, arg2);
 }
+
+export function Return10Simple(arg1, arg2) {
+  return window['go']['main']['App']['Return10Simple'](arg1, arg2);
+}

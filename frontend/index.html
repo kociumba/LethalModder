@@ -1,47 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <script type="module" src="/src/js/main.js" defer></script>
-    <!-- <script type="module" src="src/js/api.js" defer></script> -->
-    <!-- <script type="module" src="src/js/profiles.js" defer></script> -->
-    <script type="module" src="src/js/onLoad.js" defer></script>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.pink.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
-        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <title>LethalModder</title>
 </head>
-
 <body>
-    <header></header>
-    <main class="container">
-        <div id="profile-selection-page">
-            <h2>Select a Profile</h2>
-            <ul id="profiles-list">
-                <!-- Profiles will be populated here -->
-            </ul>
-            <button id="create-profile-button">Create New Profile</button>
-        </div>
-        <div id="profile-edit-page" style="display:none;">
-            <h2>Edit Profile: <span id="profile-name"></span></h2>
-            <section id="mods-section">
-                <ul id="mods-list"></ul>
-                <nav id="pagination-nav">
-                    <button id="page-first" disabled>&#171;</button>
-                    <button id="page-prev" disabled>&#8592;</button>
-                    <span id="page-number">1</span>
-                    <button id="page-next">&#8594;</button>
-                    <button id="page-last">&#187;</button>
-                </nav>
-            </section>
-        </div>
-    </main>
-    <footer>
-        <button id="debug-switch"></button>
-    </footer>
+<div id="app"></div>
+<script src="./src/main.js" type="module"></script>
 </body>
-
 </html>

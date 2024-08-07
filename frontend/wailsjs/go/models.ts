@@ -95,3 +95,26 @@ export namespace api {
 
 }
 
+export namespace main {
+	
+	export class SimplePackageListing {
+	    name: string;
+	    description: string;
+	    url: string;
+	    download_url: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SimplePackageListing(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.description = source["description"];
+	        this.url = source["url"];
+	        this.download_url = source["download_url"];
+	    }
+	}
+
+}
+

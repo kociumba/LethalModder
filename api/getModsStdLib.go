@@ -6,9 +6,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/charmbracelet/log"
 )
 
 // PackageListing represents the structure of each package listing
@@ -26,7 +27,7 @@ type PackageListing struct {
 	IsDeprecated   interface{} `json:"is_deprecated"`
 	HasNSFWContent bool        `json:"has_nsfw_content"`
 	Categories     interface{} `json:"categories"`
-	Versions       []Version   `json:"versions"`
+	Versions       []Version   `json:"versions"` // this may have something to do with the error
 }
 
 // Version represents the structure of a version listing
@@ -54,11 +55,7 @@ func (p *PackageListing) UnmarshalJSON(data []byte) error {
 		Alias: (*Alias)(p),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		log.Printf("Error unmarshaling PackageListing: %v. Raw JSON: %s", err, string(data))
+		log.Errorf("Error unmarshaling PackageListing: %v. Raw JSON: %s", err, string(data))
 		return err
 	}
 	return nil

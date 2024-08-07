@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"sync"
 
 	"github.com/charmbracelet/log"
@@ -29,6 +30,17 @@ var (
 )
 
 func main() {
+	debug.SetMemoryLimit(10 * 1024 * 1024 * 1024)
+	debug.SetMaxThreads(100)
+	debug.SetMaxStack(2 * 1024 * 1024 * 1024)
+	debug.SetGCPercent(80)
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered from panic:", r)
+		}
+	}()
+
 	// Create an instance of the app structure
 	app := NewApp()
 
@@ -51,14 +63,14 @@ func main() {
 		CSSDragProperty: "--wails-draggable",
 		CSSDragValue:    "drag",
 		Windows: &windows.Options{
-			WebviewIsTransparent: false,
-			WindowIsTranslucent:  false,
+			WebviewIsTransparent: true,
+			WindowIsTranslucent:  true,
 			BackdropType:         windows.Mica,
 		},
 	})
 
 	if err != nil {
-		log.Fatal("Error:", err.Error())
+		log.Error("Error:", err.Error())
 	}
 }
 
@@ -93,10 +105,10 @@ func InitData() {
 
 	// huh.NewSelect[int]().Run()
 
-	// don't wanna render the 20k mods when testing
-	if *dbg {
-		os.Exit(0)
-	}
+	// Uncomment to test if initialization works correctly
+	// if *dbg {
+	// 	os.Exit(0)
+	// }
 
 }
 

@@ -1,6 +1,6 @@
 module github.com/kociumba/LethalModder
 
-go 1.21
+go 1.22
 
 toolchain go1.22.5
 
@@ -50,5 +50,3 @@ require (
 	golang.org/x/sys v0.23.0
 	golang.org/x/text v0.17.0 // indirect
 )
-
-// replace github.com/wailsapp/wails/v2 v2.8.2 => C:\Users\kociu\go\pkg\mod
