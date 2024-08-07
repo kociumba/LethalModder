@@ -16,6 +16,8 @@ import (
 
 const itemsPerPage = 10
 
+var filteredListings []SimplePackageListing
+
 type Direction int
 
 const (
@@ -31,6 +33,7 @@ type SimplePackageListing struct {
 	Description string `json:"description"`
 	URL         string `json:"url"`
 	DownloadURL string `json:"download_url"`
+	Icon        string `json:"icon"`
 }
 
 // App struct
@@ -78,6 +81,7 @@ func (a *App) Return10Simple(currentIndex int, direction Direction) []SimplePack
 			Description: listing.Versions[0].Description,
 			URL:         listing.PackageURL,
 			DownloadURL: listing.Versions[0].DownloadURL,
+			Icon:        listing.Versions[0].Icon,
 		}
 	}
 
@@ -219,4 +223,48 @@ func extractZip(src, dest string) error {
 // Deprecated as I already return this in the simplified package listing
 func (a *App) GetDownloadURL(listing api.PackageListing) string {
 	return listing.Versions[0].DownloadURL
+}
+
+func (a *App) Return10WithSearch(currentIndex int, direction Direction, search string) []SimplePackageListing {
+	filteredListings = a.FilterMods(search)
+
+	var start, end int
+	if direction == Next {
+		start = currentIndex
+		end = currentIndex + itemsPerPage
+	} else {
+		start = currentIndex - itemsPerPage
+		end = currentIndex
+	}
+
+	if start < 0 {
+		start = 0
+	}
+	if end > len(packageListings) {
+		end = len(packageListings)
+	}
+	if start > len(packageListings) {
+		start = len(packageListings)
+	}
+
+	// log.Info(filteredListings[start:end])
+	return filteredListings[start:end]
+}
+
+// Unsung hero of the search function xd
+func (a *App) FilterMods(search string) []SimplePackageListing {
+	var filteredListings []SimplePackageListing
+	for _, listing := range packageListings {
+		if strings.Contains(listing.Name, search) {
+			simpleListing := SimplePackageListing{
+				Name:        listing.Name,
+				Description: listing.Versions[0].Description,
+				URL:         listing.PackageURL,
+				DownloadURL: listing.Versions[0].DownloadURL,
+				Icon:        listing.Versions[0].Icon,
+			}
+			filteredListings = append(filteredListings, simpleListing)
+		}
+	}
+	return filteredListings
 }

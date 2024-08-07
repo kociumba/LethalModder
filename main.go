@@ -162,7 +162,7 @@ func initLocalProfiles() {
 	steam, game, err := steam.FindSteam()
 	if err != nil {
 		// was crashing in CI/CD couse no steam installation was found
-		log.Error("Error finding steam: %v", err)
+		log.Errorf("Error finding steam: %v", err)
 	}
 	log.Debugf("Steam path: %s, Lethal Company path: %s\n", steam, game)
 

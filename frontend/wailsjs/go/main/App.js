@@ -6,6 +6,10 @@ export function Download(arg1) {
   return window['go']['main']['App']['Download'](arg1);
 }
 
+export function FilterMods(arg1) {
+  return window['go']['main']['App']['FilterMods'](arg1);
+}
+
 export function GetDownloadURL(arg1) {
   return window['go']['main']['App']['GetDownloadURL'](arg1);
 }
@@ -20,4 +24,8 @@ export function Return10Listings(arg1, arg2) {
 
 export function Return10Simple(arg1, arg2) {
   return window['go']['main']['App']['Return10Simple'](arg1, arg2);
+}
+
+export function Return10WithSearch(arg1, arg2, arg3) {
+  return window['go']['main']['App']['Return10WithSearch'](arg1, arg2, arg3);
 }

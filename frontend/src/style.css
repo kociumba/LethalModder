@@ -18,3 +18,46 @@
     border-radius: 6px;
     border: 3px solid transparent;
 }
+
+#mods-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#mods-list li {
+    margin: 1rem 0;
+}
+
+article {
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.listing-name {
+    font-weight: bold;
+    flex-grow: 1;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.5rem; /* Space between buttons */
+}
+
+button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    -ms-transition: background-color 0.3s;
+    -o-transition: background-color 0.3s;
+}

@@ -1,9 +1,10 @@
 <script>
     // @ts-ignore
     import { onMount } from "svelte";
+    import { writable } from "svelte/store";
     import ProfileSelection from "./ProfileSelection.svelte";
     import ProfileEdit from "./ProfileEdit.svelte";
-    import { Return10Simple, GetTotalItems } from "../wailsjs/go/main/App";
+    import { Return10Simple, Return10WithSearch, GetTotalItems } from "../wailsjs/go/main/App";
 
     let showProfileSelection = true;
     let currentPage = 1;
@@ -11,6 +12,9 @@
     const itemsPerPage = 10;
     let listings = [];
     let totalItems = 0;
+
+    export const searchStore = writable(false);
+    export const searchTermStore = writable("");
 
     const Direction = {
         Next: 0,
@@ -32,7 +36,18 @@
 
     async function fetchListings(direction) {
         try {
-            listings = await Return10Simple(currentIndex, direction);
+            let isSearching;
+            let searchTerm;
+            
+            // Subscribe to the stores to get their current values
+            searchStore.subscribe(value => isSearching = value)();
+            searchTermStore.subscribe(value => searchTerm = value)();
+
+            if (isSearching) {
+                listings = await Return10WithSearch(currentIndex, direction, searchTerm);
+            } else {
+                listings = await Return10Simple(currentIndex, direction);
+            }
             if (direction === Direction.Next) {
                 currentIndex += listings.length;
             }
@@ -81,6 +96,8 @@
             {currentPage}
             {totalItems}
             {itemsPerPage}
+            {searchStore} 
+            {searchTermStore}
             on:changePage={({ detail }) => changePage(detail)}
             on:backToProfiles={togglePage}
         />

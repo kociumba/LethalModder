@@ -5,12 +5,16 @@
     import { BrowserOpenURL } from "../wailsjs/runtime/runtime";
 
     /**
-     * @type {{name: string, description: string, url: string, download_url: string}[]}
+     * @type {{name: string, description: string, url: string, download_url: string, icon: string}[]}
      */
     export let listings = [];
     export let currentPage = 1;
     export let totalItems = 0;
     export let itemsPerPage = 10;
+    let isLoading = true;
+    let searchTerm = "";
+    export let searchStore;
+    export let searchTermStore;
 
     const dispatch = createEventDispatcher();
 
@@ -31,6 +35,22 @@
     function openWebsite(url) {
         BrowserOpenURL(url);
     }
+
+    function handleLoad(event) {
+        event.target.setAttribute("aria-busy", "false");
+    }
+
+    function turnOffSearch() {
+        searchStore.set(false);
+        searchTermStore.set("");
+        searchTerm = "";
+    }
+
+    function turnOnSearch() {
+        searchStore.set(true);
+        searchTermStore.set(searchTerm);
+        dispatch("changePage", currentPage); // Reset to first page when searching
+    }
 </script>
 
 <div id="profile-edit-page">
@@ -43,24 +63,37 @@
             <ul id="mods-list">
                 {#each listings as listing}
                     <li>
-                        <article style="height: 15vh; overflow: hidden">
-                            <div class="grid">
-                                <span
-                                    >{listing.name} - {listing.description}</span
-                                >
-                                <div style="display: flex; justify-content: flex-end;">
-                                    <button
-                                        on:click={() =>
-                                            downloadMod(listing.download_url)}
-                                        >Download</button
-                                    >
-                                    <button
-                                        on:click={() =>
-                                            openWebsite(listing.url)}
-                                        >Open website &rarr;</button
-                                    >
-                                </div>
-                            </div>
+                        <article>
+                            <details>
+                                <summary class="outline contrast">
+                                    <span class="listing-name">
+                                        <img
+                                            src={listing.icon}
+                                            alt="mod icon"
+                                            height="64"
+                                            width="64"
+                                            aria-busy="true"
+                                            on:load={(event) =>
+                                                handleLoad(event)}
+                                        />
+                                        {listing.name}
+                                    </span>
+                                    <div class="button-group">
+                                        <button
+                                            on:click={() =>
+                                                downloadMod(
+                                                    listing.download_url,
+                                                )}>Download</button
+                                        >
+                                        <button
+                                            on:click={() =>
+                                                openWebsite(listing.url)}
+                                            >Open website &rarr;</button
+                                        >
+                                    </div>
+                                </summary>
+                                <p>{listing.description}</p>
+                            </details>
                         </article>
                     </li>
                 {/each}
@@ -85,6 +118,21 @@
                 disabled={currentPage === lastPage}>&raquo;</button
             >
         </div>
+        <input
+            type="text"
+            name="text"
+            placeholder="Text"
+            aria-label="Text"
+            id="search"
+            bind:value={searchTerm}
+            on:input={() => {
+                if (searchTerm === "") {
+                    turnOffSearch();
+                } else {
+                    turnOnSearch();
+                }
+            }}
+        />
     </div>
 
     <button on:click={() => dispatch("backToProfiles")}>Back to Profiles</button

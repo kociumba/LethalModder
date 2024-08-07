@@ -102,6 +102,7 @@ export namespace main {
 	    description: string;
 	    url: string;
 	    download_url: string;
+	    icon: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new SimplePackageListing(source);
@@ -113,6 +114,7 @@ export namespace main {
 	        this.description = source["description"];
 	        this.url = source["url"];
 	        this.download_url = source["download_url"];
+	        this.icon = source["icon"];
 	    }
 	}
 
