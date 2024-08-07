@@ -27,7 +27,7 @@ jobs:
         with:
           submodules: recursive
 
-      - run: go run github.com/tc-hib/go-winres@latest make --product-version=git-tag --file-version=git-tag
+    #   - run: go run github.com/tc-hib/go-winres@latest make --product-version=git-tag --file-version=git-tag
 
       - uses: dAppServer/wails-build-action@v2.2
         with:
