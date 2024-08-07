@@ -25,6 +25,8 @@ var (
 	err             error
 	packageListings []api.PackageListing
 
+	IsLethalCompanyInstalled = false
+
 	dbg   = flag.Bool("dbg", false, "enable debug logging")
 	print = flag.Bool("print", false, "print to stdout")
 )
@@ -159,9 +161,16 @@ func initMods() {
 func initLocalProfiles() {
 	steam, game, err := steam.FindSteam()
 	if err != nil {
-		log.Fatalf("Error finding steam: %v", err)
+		// was crashing in CI/CD couse no steam installation was found
+		log.Error("Error finding steam: %v", err)
 	}
 	log.Debugf("Steam path: %s, Lethal Company path: %s\n", steam, game)
+
+	// gonna need this later
+	_, err = os.Stat(game)
+	if err != nil {
+		IsLethalCompanyInstalled = true
+	}
 
 	// Download bepinex from url
 	// api.Download("https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/", "bepinex.zip")
