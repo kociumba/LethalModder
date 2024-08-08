@@ -58,6 +58,30 @@
         }
     }
 
+    async function fetchListingsManual(index, direction) {
+        try {
+            let isSearching;
+            let searchTerm;
+            
+            // Subscribe to the stores to get their current values
+            searchStore.subscribe(value => isSearching = value)();
+            searchTermStore.subscribe(value => searchTerm = value)();
+
+            if (isSearching) {
+                listings = await Return10WithSearch(index, direction, searchTerm);
+            } else {
+                listings = await Return10Simple(index, direction);
+            }
+            if (direction === Direction.Next) {
+                currentIndex += listings.length;
+            }
+            // We don't update currentIndex for Previous direction here
+        } catch (error) {
+            console.error("Error fetching listings:", error);
+            listings = [];
+        }
+    }
+
     async function getTotalItemsCount() {
         try {
             return await GetTotalItems();
@@ -69,6 +93,13 @@
 
     // This is funny 💀
     async function changePage(newPage) {
+        if (newPage === 0) {
+            fetchListingsManual(0, Direction.Next);
+            currentIndex = 0;
+            currentPage = 1;
+            return;
+        }
+
         if (newPage < 1 || newPage > Math.ceil(totalItems / itemsPerPage))
             return;
 

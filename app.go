@@ -226,6 +226,14 @@ func (a *App) GetDownloadURL(listing api.PackageListing) string {
 }
 
 func (a *App) Return10WithSearch(currentIndex int, direction Direction, search string) []SimplePackageListing {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("Recovered from panic:", "error", r)
+			// Return an empty slice on error
+			filteredListings = nil
+		}
+	}()
+
 	filteredListings = a.FilterMods(search)
 
 	var start, end int
@@ -247,8 +255,12 @@ func (a *App) Return10WithSearch(currentIndex int, direction Direction, search s
 		start = len(packageListings)
 	}
 
-	// log.Info(filteredListings[start:end])
+	log.Info(filteredListings[start:end])
 	return filteredListings[start:end]
+}
+
+func (a *App) GetTotalItemsFiltered() int {
+	return len(filteredListings)
 }
 
 // Unsung hero of the search function xd

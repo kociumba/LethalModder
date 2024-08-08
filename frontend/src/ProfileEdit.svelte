@@ -1,7 +1,7 @@
 <script>
     // @ts-ignore
     import { createEventDispatcher } from "svelte";
-    import { Download } from "../wailsjs/go/main/App";
+    import { Download, GetTotalItemsFiltered } from "../wailsjs/go/main/App";
     import { BrowserOpenURL } from "../wailsjs/runtime/runtime";
 
     /**
@@ -15,6 +15,7 @@
     let searchTerm = "";
     export let searchStore;
     export let searchTermStore;
+    let totalItemsFiltered = 0;
 
     const dispatch = createEventDispatcher();
 
@@ -46,10 +47,20 @@
         searchTerm = "";
     }
 
-    function turnOnSearch() {
+    async function turnOnSearch() {
         searchStore.set(true);
         searchTermStore.set(searchTerm);
-        dispatch("changePage", currentPage); // Reset to first page when searching
+        totalItemsFiltered = await GetTotalItemsFiltered();
+    }
+
+    function canGoForward() {
+        if (currentPage === lastPage) {
+            return true;
+        } else if (searchTerm !== "") {
+            return !(currentPage * itemsPerPage < totalItemsFiltered);
+        } else {
+            return false;
+        }
     }
 </script>
 
@@ -62,6 +73,7 @@
         >
             <ul id="mods-list">
                 {#each listings as listing}
+                {#if listing.name != '' || listing.description != '' || listing.url != '' || listing.download_url != '' || listing.icon != ''}
                     <li>
                         <article>
                             <details>
@@ -96,12 +108,13 @@
                             </details>
                         </article>
                     </li>
+                {/if}
                 {/each}
             </ul>
         </div>
 
         <div class="pagination">
-            <button on:click={() => changePage(1)} disabled={currentPage === 1}
+            <button on:click={() => changePage(0)} disabled={currentPage === 1}
                 >&laquo;</button
             >
             <button
@@ -131,6 +144,9 @@
                 } else {
                     turnOnSearch();
                 }
+            }}
+            on:change={() => {
+                dispatch("changePage", 0);
             }}
         />
     </div>

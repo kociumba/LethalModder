@@ -18,6 +18,10 @@ export function GetTotalItems() {
   return window['go']['main']['App']['GetTotalItems']();
 }
 
+export function GetTotalItemsFiltered() {
+  return window['go']['main']['App']['GetTotalItemsFiltered']();
+}
+
 export function Return10Listings(arg1, arg2) {
   return window['go']['main']['App']['Return10Listings'](arg1, arg2);
 }
