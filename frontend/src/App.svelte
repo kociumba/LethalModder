@@ -1,10 +1,9 @@
 <script>
-    // @ts-ignore
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
     import ProfileSelection from "./ProfileSelection.svelte";
     import ProfileEdit from "./ProfileEdit.svelte";
-    import { Return10Simple, Return10WithSearch, GetTotalItems } from "../wailsjs/go/main/App";
+    import { Return10Simple, Return10WithSearch, GetTotalItems } from "../bindings/github.com/kociumba/LethalModder/dataservice";
 
     let showProfileSelection = true;
     let currentPage = 1;

@@ -1,8 +1,8 @@
 <script>
     // @ts-ignore
     import { createEventDispatcher } from "svelte";
-    import { Download, GetTotalItemsFiltered } from "../wailsjs/go/main/App";
-    import { BrowserOpenURL } from "../wailsjs/runtime/runtime";
+    import { Download, GetTotalItemsFiltered } from "../bindings/github.com/kociumba/LethalModder/dataservice";
+    import { OpenURL } from "@wailsio/runtime/src/browser";
 
     /**
      * @type {{name: string, description: string, url: string, download_url: string, icon: string}[]}
@@ -34,7 +34,7 @@
     }
 
     function openWebsite(url) {
-        BrowserOpenURL(url);
+        OpenURL(url);
     }
 
     function handleLoad(event) {

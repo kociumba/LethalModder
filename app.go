@@ -37,22 +37,30 @@ type SimplePackageListing struct {
 }
 
 // App struct
+//
+// Deprecated: Left over from wailsv2, use the new DataService struct
 type App struct {
 	ctx context.Context
 }
 
+type DataService struct{}
+
 // NewApp creates a new App application struct
+//
+// Deprecated: Left over from wailsv2, use the new DataService struct
 func NewApp() *App {
 	return &App{}
 }
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
+//
+// Deprecated: Left over from wailsv2, use the new DataService struct
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) Return10Simple(currentIndex int, direction Direction) []SimplePackageListing {
+func (d *DataService) Return10Simple(currentIndex int, direction Direction) []SimplePackageListing {
 	var start, end int
 	if direction == Next {
 		start = currentIndex
@@ -91,7 +99,7 @@ func (a *App) Return10Simple(currentIndex int, direction Direction) []SimplePack
 // Turns out the data is so big even on 10 entries that it crashed webview2 bridge
 //
 // # Do not use from frontend, results in a stack overflow
-func (a *App) Return10Listings(currentIndex int, direction Direction) []api.PackageListing {
+func (d *DataService) Return10Listings(currentIndex int, direction Direction) []api.PackageListing {
 	var start, end int
 	if direction == Next {
 		start = currentIndex
@@ -116,13 +124,13 @@ func (a *App) Return10Listings(currentIndex int, direction Direction) []api.Pack
 	return packageListings[start:end]
 }
 
-func (a *App) GetTotalItems() int {
+func (d *DataService) GetTotalItems() int {
 	log.Info(len(packageListings))
 
 	return len(packageListings)
 }
 
-func (a *App) Download(url string) (string, error) {
+func (d *DataService) Download(url string) (string, error) {
 	fileURL := url
 	fileName := filepath.Base(fileURL)
 
@@ -221,11 +229,13 @@ func extractZip(src, dest string) error {
 
 // [0] is the newest
 // Deprecated as I already return this in the simplified package listing
-func (a *App) GetDownloadURL(listing api.PackageListing) string {
+//
+// Deprecated: Use SimplePackageListing.DownloadURL
+func (d *DataService) GetDownloadURL(listing api.PackageListing) string {
 	return listing.Versions[0].DownloadURL
 }
 
-func (a *App) Return10WithSearch(currentIndex int, direction Direction, search string) []SimplePackageListing {
+func (d *DataService) Return10WithSearch(currentIndex int, direction Direction, search string) []SimplePackageListing {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("Recovered from panic:", "error", r)
@@ -234,7 +244,7 @@ func (a *App) Return10WithSearch(currentIndex int, direction Direction, search s
 		}
 	}()
 
-	filteredListings = a.FilterMods(search)
+	filteredListings = d.FilterMods(search)
 
 	var start, end int
 	if direction == Next {
@@ -259,12 +269,12 @@ func (a *App) Return10WithSearch(currentIndex int, direction Direction, search s
 	return filteredListings[start:end]
 }
 
-func (a *App) GetTotalItemsFiltered() int {
+func (d *DataService) GetTotalItemsFiltered() int {
 	return len(filteredListings)
 }
 
 // Unsung hero of the search function xd
-func (a *App) FilterMods(search string) []SimplePackageListing {
+func (d *DataService) FilterMods(search string) []SimplePackageListing {
 	var filteredListings []SimplePackageListing
 	for _, listing := range packageListings {
 		if strings.Contains(strings.ToLower(listing.Name), strings.ToLower(search)) {
