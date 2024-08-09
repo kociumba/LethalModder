@@ -267,7 +267,7 @@ func (a *App) GetTotalItemsFiltered() int {
 func (a *App) FilterMods(search string) []SimplePackageListing {
 	var filteredListings []SimplePackageListing
 	for _, listing := range packageListings {
-		if strings.Contains(listing.Name, search) {
+		if strings.Contains(strings.ToLower(listing.Name), strings.ToLower(search)) {
 			simpleListing := SimplePackageListing{
 				Name:        listing.Name,
 				Description: listing.Versions[0].Description,
