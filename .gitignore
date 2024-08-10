@@ -31,3 +31,4 @@ rsrc_windows_amd64.syso
 build/bin
 node_modules
 frontend/dist
+!build/nsis/MicrosoftEdgeWebview2Setup.exe
