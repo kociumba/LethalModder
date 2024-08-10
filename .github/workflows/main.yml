@@ -39,7 +39,12 @@ jobs:
       - name: Set up wailsv3
         run: |
             go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
-            echo "export PATH=$PATH:`go env GOPATH`/bin" >> $GITHUB_ENV
+            if [[ "$RUNNER_OS" == "Windows" ]]; then
+                echo "GOPATH_BIN=$(go env GOPATH)/bin" >> $GITHUB_ENV
+                echo "PATH=\$PATH:\$GOPATH_BIN" >> $GITHUB_ENV
+            else
+                echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> $GITHUB_ENV
+            fi
 
     # Need to adapt this to use wails3
       - name: Build windows/amd64
