@@ -133,8 +133,8 @@ func (d *DataService) GetTotalItems() int {
 	return len(packageListings)
 }
 
-func (d *DataService) Download(url string, name, version string) (string, error) {
-	fileURL := url
+func (d *DataService) Download(listing SimplePackageListing) (string, error) {
+	fileURL := listing.DownloadURL
 	fileName := filepath.Base(fileURL)
 
 	exec, err := os.Executable()
@@ -149,9 +149,8 @@ func (d *DataService) Download(url string, name, version string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	defer os.Remove(tempFile.Name()) // Remove temp file after extraction
+	defer os.Remove(tempFile.Name())
 
-	// Download the file
 	resp, err := http.Get(fileURL)
 	if err != nil {
 		return "", err
@@ -173,7 +172,7 @@ func (d *DataService) Download(url string, name, version string) (string, error)
 	}
 
 	// Create a new folder for the extracted contents
-	outputDirName := fmt.Sprintf("%s_%s", name, version)
+	outputDirName := fmt.Sprintf("%s_%s", listing.Name, listing.Version)
 	extractedDir := filepath.Join(execDir, outputDirName)
 	if err := os.Mkdir(extractedDir, os.ModePerm); err != nil {
 		return "", err

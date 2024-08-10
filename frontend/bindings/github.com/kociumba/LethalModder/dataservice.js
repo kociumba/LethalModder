@@ -15,13 +15,11 @@ import * as api$0 from "./api/models.js";
 import * as $models from "./models.js";
 
 /**
- * @param {string} url
- * @param {string} name
- * @param {string} version
+ * @param {$models.SimplePackageListing} listing
  * @returns {Promise<string> & { cancel(): void }}
  */
-export function Download(url, name, version) {
-    let $resultPromise = /** @type {any} */($Call.ByID(3764793721, url, name, version));
+export function Download(listing) {
+    let $resultPromise = /** @type {any} */($Call.ByID(3764793721, listing));
     return $resultPromise;
 }
 

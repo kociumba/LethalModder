@@ -8,9 +8,10 @@
     import { OpenURL } from "@wailsio/runtime/src/browser";
     import LoadingOverlay from "./LoadingOverlay.svelte";
     import { Events } from "@wailsio/runtime";
+    import { SimplePackageListing } from "../bindings/github.com/kociumba/LethalModder/models";
 
     /**
-     * @type {import("../bindings/github.com/kociumba/LethalModder/models").SimplePackageListing[]}
+     * @type {SimplePackageListing[]}
      * 
      * Simplified version of PackageListing, required to avoid a stack overflow in the webview2 bridge
      * 
@@ -36,11 +37,14 @@
     }
 
     // damn the wails v3 event are good
-    async function downloadMod(url, name, version) {
-        loadingText = "Downloading " + name + "_" + version;
+    /**
+     * @param {SimplePackageListing} listing
+     */
+    async function downloadMod(listing) {
+        loadingText = "Downloading " + listing.name + "_" + listing.version;
         isLoading = true;
         try {
-            await Download(url,name,version);
+            await Download(listing);
         } catch (error) {
             console.error("Error downloading mod:", error);
         }
@@ -111,9 +115,7 @@
                                             <button
                                                 on:click={() =>
                                                     downloadMod(
-                                                        listing.download_url,
-                                                        listing.name,
-                                                        listing.version
+                                                        listing
                                                     )}>Download</button
                                             >
                                             <button

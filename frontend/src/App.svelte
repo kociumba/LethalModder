@@ -45,7 +45,7 @@
     })
 
     Events.On("lethalCompanyWarning", async function(data) {
-        isWarningVisible = data
+        isWarningVisible = !data
         console.log("isWarningVisible", isWarningVisible)
     })
 

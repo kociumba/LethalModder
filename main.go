@@ -153,9 +153,10 @@ func ManageWindows() {
 
 	if <-done {
 		// something isn't loading
-		time.Sleep(1 * time.Second)
-		log.Info(packageListings[0:2])
+		// time.Sleep(1 * time.Second)
+		// log.Info(packageListings[0:2])
 
+		// Needed when centering the splash screen
 		if *dbg {
 			splashScreen.OpenDevTools()
 			return
