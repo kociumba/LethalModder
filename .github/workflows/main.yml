@@ -54,9 +54,4 @@ jobs:
         run: |
             wails3 task build:windows:prod:amd64
             wails3 task package:windows:amd64
-
-      - name: Build windows/arm64
-        run: |
-            wails3 task build:windows:prod:arm64
-            wails3 task package:windows:arm64
         
