@@ -46,6 +46,9 @@ jobs:
         run: |
             go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
 
+      - name: Wails doctor for debug
+        run: wails3 doctor
+
     # Need to adapt this to use wails3
       - name: Build windows/amd64
         run: |
