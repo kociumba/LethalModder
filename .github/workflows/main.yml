@@ -18,7 +18,7 @@ jobs:
       matrix:
         build: [
         #   {name: LethalModder, platform: linux/amd64, os: ubuntu-latest},
-          {name: LethalModder, platform: windows/amd64, os: windows-latest},
+          {name: LethalModder, platform: windows/amd64, os: windows-latest, wails: wails3.exe},
         #   {name: LethalModder, platform: darwin/universal, os: macos-latest}
         ]
     runs-on: ${{ matrix.build.os }}
@@ -29,9 +29,10 @@ jobs:
 
     # Experiment to avoid downloading like 500 deps everytime
       - name: Cache Wails installation
+        id: cache-wails
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/go/bin/wails3*  # Adjust this path if necessary
+          path: ${{ github.workspace }}/go/bin/${{ matrix.build.wails }}
           key: ${{ runner.os }}-wails-${{ hashFiles('go.sum') }}
           restore-keys: |
             ${{ runner.os }}-wails-
@@ -55,8 +56,8 @@ jobs:
     #       package: true
     #       go-version: 1.21
 
-      - name: Set up wailsv3
-        shell: bash
+      - name: Set up Wails
+        if: steps.cache-wails.outputs.cache-hit != 'true'
         run: |
             go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
 
