@@ -4,6 +4,7 @@
     import ProfileSelection from "./ProfileSelection.svelte";
     import ProfileEdit from "./ProfileEdit.svelte";
     import { Return10Simple, Return10WithSearch, GetTotalItems } from "../bindings/github.com/kociumba/LethalModder/dataservice";
+    import { Events } from "@wailsio/runtime"
 
     let showProfileSelection = true;
     let currentPage = 1;
@@ -28,10 +29,17 @@
         await init();
     });
 
+    // actually breaks without this 🤷
     async function init() {
-        totalItems = await getTotalItemsCount();
+        totalItems = await GetTotalItems();
         await fetchListings(Direction.Next);
     }
+
+    // Needed to get totalItems after they loaded
+    Events.On("totalItems", async function(data) {
+        totalItems = data
+        await fetchListings(Direction.Next);
+    })
 
     async function fetchListings(direction) {
         try {

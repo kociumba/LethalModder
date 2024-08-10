@@ -116,16 +116,18 @@ func main() {
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
 
-	// Create a goroutine that emits an event containing the current time every second.
-	// The frontend can listen to this event and update the UI accordingly.
+	// Tells the frontend when data is actaully loaded
+	// Needed with more than one window
 	go func() {
 		for {
-			now := time.Now().Format(time.RFC1123)
-			app.Events.Emit(&application.WailsEvent{
-				Name: "time",
-				Data: now,
-			})
-			time.Sleep(time.Second)
+			time.Sleep(50 * time.Millisecond)
+			if len(packageListings) != 0 {
+				app.Events.Emit(&application.WailsEvent{
+					Name: "totalItems",
+					Data: len(packageListings),
+				})
+				break
+			}
 		}
 	}()
 
@@ -150,8 +152,11 @@ func ManageWindows() {
 	}()
 
 	if <-done {
-		splashScreen.Close()
+		// something isn't loading
+		time.Sleep(1 * time.Second)
+		log.Info(packageListings[0:2])
 
+		splashScreen.Close()
 		LethalModder.Show()
 	}
 }

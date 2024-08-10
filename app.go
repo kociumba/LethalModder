@@ -12,6 +12,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/kociumba/LethalModder/api"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 const itemsPerPage = 10
@@ -180,6 +181,11 @@ func (d *DataService) Download(url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	app.Events.Emit(&application.WailsEvent{
+		Name: "downloadComplete",
+		Data: extractedDir,
+	})
 
 	return extractedDir, nil
 }

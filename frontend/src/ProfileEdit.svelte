@@ -1,8 +1,13 @@
 <script>
     // @ts-ignore
     import { createEventDispatcher } from "svelte";
-    import { Download, GetTotalItemsFiltered } from "../bindings/github.com/kociumba/LethalModder/dataservice";
+    import {
+        Download,
+        GetTotalItemsFiltered,
+    } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { OpenURL } from "@wailsio/runtime/src/browser";
+    import LoadingOverlay from "./LoadingOverlay.svelte";
+    import { Events } from "@wailsio/runtime";
 
     /**
      * @type {{name: string, description: string, url: string, download_url: string, icon: string}[]}
@@ -11,11 +16,12 @@
     export let currentPage = 1;
     export let totalItems = 0;
     export let itemsPerPage = 10;
-    let isLoading = true;
+    let isLoading = false;
     let searchTerm = "";
     export let searchStore;
     export let searchTermStore;
     let totalItemsFiltered = 0;
+    let loadingText = "Downloading mod";
 
     const dispatch = createEventDispatcher();
 
@@ -25,13 +31,19 @@
         dispatch("changePage", newPage);
     }
 
-    async function downloadMod(url) {
+    async function downloadMod(url, name) {
+        loadingText = "Downloading " + name;
+        isLoading = true;
         try {
             await Download(url);
         } catch (error) {
             console.error("Error downloading mod:", error);
         }
     }
+
+    Events.On("downloadComplete", () => {
+        isLoading = false;
+    });
 
     function openWebsite(url) {
         OpenURL(url);
@@ -73,42 +85,43 @@
         >
             <ul id="mods-list">
                 {#each listings as listing}
-                {#if listing.name != '' || listing.description != '' || listing.url != '' || listing.download_url != '' || listing.icon != ''}
-                    <li>
-                        <article>
-                            <details>
-                                <summary class="outline contrast">
-                                    <span class="listing-name">
-                                        <img
-                                            src={listing.icon}
-                                            alt="mod icon"
-                                            height="64"
-                                            width="64"
-                                            aria-busy="true"
-                                            on:load={(event) =>
-                                                handleLoad(event)}
-                                        />
-                                        {listing.name}
-                                    </span>
-                                    <div class="button-group">
-                                        <button
-                                            on:click={() =>
-                                                downloadMod(
-                                                    listing.download_url,
-                                                )}>Download</button
-                                        >
-                                        <button
-                                            on:click={() =>
-                                                openWebsite(listing.url)}
-                                            >Open website &rarr;</button
-                                        >
-                                    </div>
-                                </summary>
-                                <p>{listing.description}</p>
-                            </details>
-                        </article>
-                    </li>
-                {/if}
+                    {#if listing.name != "" || listing.description != "" || listing.url != "" || listing.download_url != "" || listing.icon != ""}
+                        <li>
+                            <article>
+                                <details>
+                                    <summary class="outline contrast">
+                                        <span class="listing-name">
+                                            <img
+                                                src={listing.icon}
+                                                alt="mod icon"
+                                                height="64"
+                                                width="64"
+                                                aria-busy="true"
+                                                on:load={(event) =>
+                                                    handleLoad(event)}
+                                            />
+                                            {listing.name}
+                                        </span>
+                                        <div class="button-group">
+                                            <button
+                                                on:click={() =>
+                                                    downloadMod(
+                                                        listing.download_url,
+                                                        listing.name,
+                                                    )}>Download</button
+                                            >
+                                            <button
+                                                on:click={() =>
+                                                    openWebsite(listing.url)}
+                                                >Open website &rarr;</button
+                                            >
+                                        </div>
+                                    </summary>
+                                    <p>{listing.description}</p>
+                                </details>
+                            </article>
+                        </li>
+                    {/if}
                 {/each}
             </ul>
         </div>
@@ -154,3 +167,5 @@
     <button on:click={() => dispatch("backToProfiles")}>Back to Profiles</button
     >
 </div>
+
+<LoadingOverlay {loadingText} {isLoading} />
