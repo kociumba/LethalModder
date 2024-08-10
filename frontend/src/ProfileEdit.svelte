@@ -10,7 +10,11 @@
     import { Events } from "@wailsio/runtime";
 
     /**
-     * @type {{name: string, description: string, url: string, download_url: string, icon: string}[]}
+     * @type {import("../bindings/github.com/kociumba/LethalModder/models").SimplePackageListing[]}
+     * 
+     * Simplified version of PackageListing, required to avoid a stack overflow in the webview2 bridge
+     * 
+     * This holds 10 currently displayed simple listings
      */
     export let listings = [];
     export let currentPage = 1;
@@ -31,11 +35,12 @@
         dispatch("changePage", newPage);
     }
 
-    async function downloadMod(url, name) {
-        loadingText = "Downloading " + name;
+    // damn the wails v3 event are good
+    async function downloadMod(url, name, version) {
+        loadingText = "Downloading " + name + "_" + version;
         isLoading = true;
         try {
-            await Download(url);
+            await Download(url,name,version);
         } catch (error) {
             console.error("Error downloading mod:", error);
         }
@@ -108,6 +113,7 @@
                                                     downloadMod(
                                                         listing.download_url,
                                                         listing.name,
+                                                        listing.version
                                                     )}>Download</button
                                             >
                                             <button

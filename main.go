@@ -156,6 +156,10 @@ func ManageWindows() {
 		time.Sleep(1 * time.Second)
 		log.Info(packageListings[0:2])
 
+		if *dbg {
+			splashScreen.OpenDevTools()
+			return
+		}
 		splashScreen.Close()
 		LethalModder.Show()
 	}
@@ -220,13 +224,21 @@ func initLocalProfiles() {
 		// was crashing in CI/CD couse no steam installation was found
 		log.Errorf("Error finding steam: %v", err)
 	}
-	log.Debugf("Steam path: %s, Lethal Company path: %s\n", steam, game)
+	log.Infof("Steam path: %s, Lethal Company path: %s\n", steam, game)
 
 	// gonna need this later
 	_, err = os.Stat(game)
-	if err != nil {
+	if err == nil {
 		IsLethalCompanyInstalled = true
 	}
+
+	log.Info("Steam check complete: ", "IsLethalCompanyInstalled", IsLethalCompanyInstalled)
+
+	// idk this event doesn't get picked up
+	app.Events.Emit(&application.WailsEvent{
+		Name: "lethalCompanyWarning",
+		Data: IsLethalCompanyInstalled,
+	})
 
 	// Download bepinex from url
 	// api.Download("https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/", "bepinex.zip")

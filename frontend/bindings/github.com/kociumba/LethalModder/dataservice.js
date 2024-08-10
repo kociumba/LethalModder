@@ -16,10 +16,12 @@ import * as $models from "./models.js";
 
 /**
  * @param {string} url
+ * @param {string} name
+ * @param {string} version
  * @returns {Promise<string> & { cancel(): void }}
  */
-export function Download(url) {
-    let $resultPromise = /** @type {any} */($Call.ByID(3764793721, url));
+export function Download(url, name, version) {
+    let $resultPromise = /** @type {any} */($Call.ByID(3764793721, url, name, version));
     return $resultPromise;
 }
 
@@ -47,6 +49,16 @@ export function FilterMods(search) {
  */
 export function GetDownloadURL(listing) {
     let $resultPromise = /** @type {any} */($Call.ByID(4145055636, listing));
+    return $resultPromise;
+}
+
+/**
+ * shitass function, still don't know why the event doesn't get picked up
+ * maby multi window stuff
+ * @returns {Promise<boolean> & { cancel(): void }}
+ */
+export function GetIsLethalCompanyInstalled() {
+    let $resultPromise = /** @type {any} */($Call.ByID(825651866));
     return $resultPromise;
 }
 

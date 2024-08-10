@@ -38,6 +38,13 @@ export class SimplePackageListing {
              */
             this["name"] = "";
         }
+        if (!("version" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["version"] = "";
+        }
         if (!("description" in $$source)) {
             /**
              * @member

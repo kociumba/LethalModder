@@ -31,6 +31,7 @@ const (
 // Has to be json tagged to translate into JS
 type SimplePackageListing struct {
 	Name        string `json:"name"`
+	Version     string `json:"version"`
 	Description string `json:"description"`
 	URL         string `json:"url"`
 	DownloadURL string `json:"download_url"`
@@ -87,6 +88,7 @@ func (d *DataService) Return10Simple(currentIndex int, direction Direction) []Si
 	for i, listing := range subset {
 		simplifiedSubset[i] = SimplePackageListing{
 			Name:        listing.Name,
+			Version:     listing.Versions[0].VersionNumber,
 			Description: listing.Versions[0].Description,
 			URL:         listing.PackageURL,
 			DownloadURL: listing.Versions[0].DownloadURL,
@@ -131,7 +133,7 @@ func (d *DataService) GetTotalItems() int {
 	return len(packageListings)
 }
 
-func (d *DataService) Download(url string) (string, error) {
+func (d *DataService) Download(url string, name, version string) (string, error) {
 	fileURL := url
 	fileName := filepath.Base(fileURL)
 
@@ -171,7 +173,8 @@ func (d *DataService) Download(url string) (string, error) {
 	}
 
 	// Create a new folder for the extracted contents
-	extractedDir := filepath.Join(execDir, strings.TrimSuffix(fileName, filepath.Ext(fileName)))
+	outputDirName := fmt.Sprintf("%s_%s", name, version)
+	extractedDir := filepath.Join(execDir, outputDirName)
 	if err := os.Mkdir(extractedDir, os.ModePerm); err != nil {
 		return "", err
 	}
@@ -286,6 +289,7 @@ func (d *DataService) FilterMods(search string) []SimplePackageListing {
 		if strings.Contains(strings.ToLower(listing.Name), strings.ToLower(search)) {
 			simpleListing := SimplePackageListing{
 				Name:        listing.Name,
+				Version:     listing.Versions[0].VersionNumber,
 				Description: listing.Versions[0].Description,
 				URL:         listing.PackageURL,
 				DownloadURL: listing.Versions[0].DownloadURL,
@@ -295,4 +299,10 @@ func (d *DataService) FilterMods(search string) []SimplePackageListing {
 		}
 	}
 	return filteredListings
+}
+
+// shitass function, still don't know why the event doesn't get picked up
+// maby multi window stuff
+func (d *DataService) GetIsLethalCompanyInstalled() bool {
+	return IsLethalCompanyInstalled
 }

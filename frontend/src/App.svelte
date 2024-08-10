@@ -3,7 +3,8 @@
     import { writable } from "svelte/store";
     import ProfileSelection from "./ProfileSelection.svelte";
     import ProfileEdit from "./ProfileEdit.svelte";
-    import { Return10Simple, Return10WithSearch, GetTotalItems } from "../bindings/github.com/kociumba/LethalModder/dataservice";
+    import LethalCompanyWarningOverlay from "./LethalCompanyWarningOverlay.svelte";
+    import { Return10Simple, Return10WithSearch, GetTotalItems, GetIsLethalCompanyInstalled } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { Events } from "@wailsio/runtime"
 
     let showProfileSelection = true;
@@ -12,6 +13,7 @@
     const itemsPerPage = 10;
     let listings = [];
     let totalItems = 0;
+    let isWarningVisible = false;
 
     export const searchStore = writable(false);
     export const searchTermStore = writable("");
@@ -33,12 +35,18 @@
     async function init() {
         totalItems = await GetTotalItems();
         await fetchListings(Direction.Next);
+        isWarningVisible = !(await GetIsLethalCompanyInstalled());
     }
 
     // Needed to get totalItems after they loaded
     Events.On("totalItems", async function(data) {
         totalItems = data
         await fetchListings(Direction.Next);
+    })
+
+    Events.On("lethalCompanyWarning", async function(data) {
+        isWarningVisible = data
+        console.log("isWarningVisible", isWarningVisible)
     })
 
     async function fetchListings(direction) {
@@ -118,6 +126,8 @@
 
         await fetchListings(direction);
         currentPage = newPage;
+
+        console.log("isWarningVisible", isWarningVisible)
     }
 
     function togglePage() {
@@ -142,3 +152,5 @@
     {/if}
     <button on:click={togglePage}></button>
 </main>
+
+<LethalCompanyWarningOverlay {isWarningVisible}/>
