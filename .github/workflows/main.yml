@@ -36,15 +36,19 @@ jobs:
     #       package: true
     #       go-version: 1.21
 
+      - name: Set up wailsv3
+        run: |
+            go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
+            echo "export PATH=$PATH:`go env GOPATH`/bin" >> $GITHUB_ENV
+
     # Need to adapt this to use wails3
-    # This is fucking stupid but might just work
       - name: Build windows/amd64
         run: |
-            go run -v github.com/wailsapp/wails/v3/cmd/wails3@latest task build:windows:prod:amd64
-            go run -v github.com/wailsapp/wails/v3/cmd/wails3@latest task package:windows:amd64
+            wails3 task build:windows:prod:amd64
+            wails3 task package:windows:amd64
 
       - name: Build windows/arm64
         run: |
-            go run -v github.com/wailsapp/wails/v3/cmd/wails3@latest task build:windows:prod:arm64
-            go run -v github.com/wailsapp/wails/v3/cmd/wails3@latest task package:windows:arm64
+            wails3 task build:windows:prod:arm64
+            wails3 task package:windows:arm64
         
