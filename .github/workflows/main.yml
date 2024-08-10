@@ -27,6 +27,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.22.6
+
     #   - run: go run github.com/tc-hib/go-winres@latest make --product-version=git-tag --file-version=git-tag
 
     #   - uses: dAppServer/wails-build-action@v2.2
@@ -40,12 +45,6 @@ jobs:
         shell: bash
         run: |
             go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
-            if [[ "$RUNNER_OS" == "Windows" ]]; then
-                echo "GOPATH_BIN=$(go env GOPATH)/bin" >> $GITHUB_ENV
-                echo "PATH=\$PATH:\$GOPATH_BIN" >> $GITHUB_ENV
-            else
-                echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> $GITHUB_ENV
-            fi
 
     # Need to adapt this to use wails3
       - name: Build windows/amd64
