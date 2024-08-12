@@ -4,7 +4,12 @@
     import ProfileSelection from "./ProfileSelection.svelte";
     import ProfileEdit from "./ProfileEdit.svelte";
     import LethalCompanyWarningOverlay from "./LethalCompanyWarningOverlay.svelte";
-    import { Return10Simple, Return10WithSearch, GetTotalItems, GetIsLethalCompanyInstalled } from "../bindings/github.com/kociumba/LethalModder/dataservice";
+    import { 
+        Return10Simple, 
+        Return10WithSearch, 
+        GetTotalItems, 
+        GetIsLethalCompanyInstalled,
+    } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { Events } from "@wailsio/runtime"
 
     let showProfileSelection = true;

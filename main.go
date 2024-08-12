@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/kociumba/LethalModder/api"
+	"github.com/kociumba/LethalModder/profiles"
 	"github.com/kociumba/LethalModder/steam"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -27,6 +28,8 @@ var (
 	packageListings []api.PackageListing
 
 	IsLethalCompanyInstalled = false
+	steamPath                string
+	gamePath                 string
 
 	done = make(chan bool)
 
@@ -220,15 +223,15 @@ func initMods() {
 }
 
 func initLocalProfiles() {
-	steam, game, err := steam.FindSteam()
+	steamPath, gamePath, err = steam.FindSteam()
 	if err != nil {
 		// was crashing in CI/CD couse no steam installation was found
 		log.Errorf("Error finding steam: %v", err)
 	}
-	log.Infof("Steam path: %s, Lethal Company path: %s\n", steam, game)
+	log.Infof("Steam path: %s, Lethal Company path: %s\n", steamPath, gamePath)
 
 	// gonna need this later
-	_, err = os.Stat(game)
+	_, err = os.Stat(gamePath)
 	if err == nil {
 		IsLethalCompanyInstalled = true
 	}
@@ -240,6 +243,8 @@ func initLocalProfiles() {
 		Name: "lethalCompanyWarning",
 		Data: IsLethalCompanyInstalled,
 	})
+
+	profiles.GetLocalData()
 
 	// Download bepinex from url
 	// api.Download("https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/", "bepinex.zip")

@@ -15,6 +15,15 @@ import * as api$0 from "./api/models.js";
 import * as $models from "./models.js";
 
 /**
+ * @param {string} name
+ * @returns {Promise<void> & { cancel(): void }}
+ */
+export function CreateProfile(name) {
+    let $resultPromise = /** @type {any} */($Call.ByID(4208716454, name));
+    return $resultPromise;
+}
+
+/**
  * @param {$models.SimplePackageListing} listing
  * @returns {Promise<string> & { cancel(): void }}
  */

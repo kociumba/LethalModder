@@ -12,6 +12,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/kociumba/LethalModder/api"
+	"github.com/kociumba/LethalModder/profiles"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -304,4 +305,37 @@ func (d *DataService) FilterMods(search string) []SimplePackageListing {
 // maby multi window stuff
 func (d *DataService) GetIsLethalCompanyInstalled() bool {
 	return IsLethalCompanyInstalled
+}
+
+func (d *DataService) CreateProfile(name string) {
+	// Check if a profile with the same name already exists
+	for _, profile := range profiles.Profiles {
+		if profile.Name == name {
+			return
+		}
+	}
+
+	// Create a new profile
+	newProfilePath := filepath.Join(profiles.ProfilesDir, name)
+	err = os.Mkdir(newProfilePath, os.ModePerm)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Check if second entry in packageListings is BepInEx and install it into game folder
+	if packageListings[1].Name == "BepInExPack" {
+
+		profiles.InstallBepInEx(
+			packageListings[1].Versions[0].DownloadURL,
+			packageListings[1].Name,
+			packageListings[1].Versions[0].VersionNumber,
+			newProfilePath,
+		)
+
+		app.Events.Emit(&application.WailsEvent{
+			Name: "bepinexInstalled",
+			Data: true,
+		})
+	}
 }
