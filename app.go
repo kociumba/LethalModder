@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -338,4 +339,31 @@ func (d *DataService) CreateProfile(name string) {
 			Data: true,
 		})
 	}
+}
+
+func (d *DataService) GetProfiles() []profiles.Profile {
+	profiles.Profiles = []profiles.Profile{}
+
+	profiles.GetLocalData()
+
+	return profiles.Profiles
+}
+
+// Windows only
+// gonna have to make a system check for this, when linux support is going to come
+func (d *DataService) OpenProfileDirectory(profile profiles.Profile) {
+	path := filepath.Clean(profile.Path)
+	cmd := exec.Command("explorer", path)
+	cmd.Start()
+}
+
+func (d *DataService) SelectProfile(profile profiles.Profile) {
+	app.Events.Emit(&application.WailsEvent{
+		Name: "selectedProfile",
+		Data: profile,
+	})
+
+	log.Info("Selected profile: ", "struct", profile)
+
+	SelectProfile = profile
 }

@@ -31,6 +31,8 @@ var (
 	steamPath                string
 	gamePath                 string
 
+	SelectProfile profiles.Profile
+
 	done = make(chan bool)
 
 	dbg   = flag.Bool("dbg", false, "enable debug logging")

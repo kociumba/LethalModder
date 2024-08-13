@@ -1,10 +1,8 @@
-/* Works on Firefox */
 * {
     scrollbar-width: thin;
     scrollbar-color: #f2f2f2 transparent;
 }
 
-/* Works on Chrome, Edge, and Safari */
 *::-webkit-scrollbar {
     width: 12px;
 }
@@ -60,4 +58,11 @@ button {
     -moz-transition: background-color 0.3s;
     -ms-transition: background-color 0.3s;
     -o-transition: background-color 0.3s;
+}
+
+article.grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 1rem;
 }

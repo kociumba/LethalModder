@@ -9,6 +9,7 @@
         Return10WithSearch, 
         GetTotalItems, 
         GetIsLethalCompanyInstalled,
+        GetProfiles,
     } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { Events } from "@wailsio/runtime"
 
@@ -19,6 +20,8 @@
     let listings = [];
     let totalItems = 0;
     let isWarningVisible = false;
+    let profiles = [];
+    let SelectedProfile
 
     export const searchStore = writable(false);
     export const searchTermStore = writable("");
@@ -40,6 +43,7 @@
     async function init() {
         totalItems = await GetTotalItems();
         await fetchListings(Direction.Next);
+        await fetchProfiles();
         isWarningVisible = !(await GetIsLethalCompanyInstalled());
     }
 
@@ -77,6 +81,21 @@
             listings = [];
         }
     }
+
+    async function fetchProfiles() {
+        try {
+            profiles = await GetProfiles();
+        } catch (error) {
+            console.error("Error fetching profiles:", error);
+            profiles = [];
+        }
+    }
+
+    Events.On("selectedProfile", async function(data) {
+        SelectedProfile = data
+        console.log("SelectedProfile", SelectedProfile)
+        togglePage();
+    })
 
     async function fetchListingsManual(index, direction) {
         try {
@@ -142,7 +161,7 @@
 
 <main class="container" style="overflow: hidden; height: 100vh">
     {#if showProfileSelection}
-        <ProfileSelection on:createProfile={togglePage} />
+        <ProfileSelection on:createProfile={togglePage} {profiles}/>
     {:else}
         <ProfileEdit
             {listings}
