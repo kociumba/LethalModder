@@ -49,6 +49,7 @@
             await Download(listing);
         } catch (error) {
             console.error("Error downloading mod:", error);
+            isLoading = false;
         }
     }
 

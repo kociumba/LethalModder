@@ -33,6 +33,10 @@ var (
 
 	SelectProfile profiles.Profile
 
+	packageMap     map[string]api.PackageListing
+	downloadedMods map[string]bool
+	globalMu       sync.RWMutex
+
 	done = make(chan bool)
 
 	dbg   = flag.Bool("dbg", false, "enable debug logging")
@@ -195,6 +199,8 @@ func InitData() {
 
 	wg.Wait()
 
+	InitializeGlobalMaps(packageListings)
+
 	// Uncomment to only test initialization
 	// if *dbg {
 	// 	os.Exit(0)
@@ -220,6 +226,11 @@ func initMods() {
 	}
 
 	log.Debugf("Successfully parsed %d package listings\n", len(packageListings))
+
+	// packageMap = make(map[string]api.PackageListing, len(packageListings))
+	// for _, listing := range packageListings {
+	// 	packageMap[listing.Name] = listing
+	// }
 
 	done <- true
 }

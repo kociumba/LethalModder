@@ -2,7 +2,7 @@ package main
 
 import (
 	"archive/zip"
-	"context"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,7 +30,7 @@ const (
 	Previous
 )
 
-var packageMap = make(map[string]api.PackageListing) // still not sure if this is a good idea
+// var packageMap = make(map[string]api.PackageListing) // still not sure if this is a good idea
 
 // Used to make sure webview2 bridge doesn't get overloaded.
 //
@@ -53,32 +53,9 @@ type ModManifest struct {
 	Dependencies  []string `json:"dependencies"`
 }
 
-// App struct
-//
-// Deprecated: Left over from wailsv2, use the new DataService struct
-type App struct {
-	ctx context.Context
-}
-
+// The new main data service for the frontend
+// All the old code from wailsv2 was deleted.
 type DataService struct {
-	downloadedMods  map[string]bool
-	downloadingMods map[string]bool
-	mu              sync.Mutex
-}
-
-// NewApp creates a new App application struct
-//
-// Deprecated: Left over from wailsv2, use the new DataService struct
-func NewApp() *App {
-	return &App{}
-}
-
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
-//
-// Deprecated: Left over from wailsv2, use the new DataService struct
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
 }
 
 func (d *DataService) Return10Simple(currentIndex int, direction Direction) []SimplePackageListing {
@@ -152,6 +129,17 @@ func (d *DataService) GetTotalItems() int {
 	return len(packageListings)
 }
 
+func InitializeGlobalMaps(packageListings []api.PackageListing) {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+
+	packageMap = make(map[string]api.PackageListing, len(packageListings))
+	for _, listing := range packageListings {
+		packageMap[listing.Name] = listing
+	}
+	downloadedMods = make(map[string]bool)
+}
+
 // overcomplicated, r2modman just extracts everything from the bepinex
 func (d *DataService) Download(listing SimplePackageListing) (string, error) {
 	defer func() {
@@ -162,20 +150,13 @@ func (d *DataService) Download(listing SimplePackageListing) (string, error) {
 		}
 	}()
 
-	d.mu.Lock()
-	if d.downloadingMods[listing.Name] {
-		d.mu.Unlock()
-		log.Error("Already downloading mod", "name", listing.Name)
-		return "", fmt.Errorf("circular dependency detected: %s", listing.Name)
+	globalMu.Lock()
+	if downloadedMods[listing.Name] {
+		globalMu.Unlock()
+		return "", nil // Mod already downloaded
 	}
-	d.downloadingMods[listing.Name] = true
-	d.mu.Unlock()
-
-	defer func() {
-		d.mu.Lock()
-		delete(d.downloadingMods, listing.Name)
-		d.mu.Unlock()
-	}()
+	downloadedMods[listing.Name] = true
+	globalMu.Unlock()
 
 	fileURL := listing.DownloadURL
 	fileName := filepath.Base(fileURL)
@@ -210,10 +191,6 @@ func (d *DataService) Download(listing SimplePackageListing) (string, error) {
 		log.Error(err)
 		return "", err
 	}
-
-	d.mu.Lock()
-	d.downloadedMods[listing.Name] = true
-	d.mu.Unlock()
 
 	app.Events.Emit(&application.WailsEvent{
 		Name: "downloadComplete",
@@ -348,7 +325,9 @@ func (d *DataService) extractFile(f *zip.File, destPath string) error {
 	defer srcFile.Close()
 
 	_, err = io.Copy(destFile, srcFile)
-	log.Error(err)
+	if err != nil {
+		log.Error(err)
+	}
 	return err
 }
 
@@ -360,25 +339,31 @@ func (d *DataService) parseManifest(file *zip.File) (*ModManifest, error) {
 	}
 	defer rc.Close()
 
-	var manifest ModManifest
-	if err := json.NewDecoder(rc).Decode(&manifest); err != nil {
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, rc); err != nil {
 		log.Error(err)
 		return nil, err
 	}
+
+	// Strip BOM if present
+	manifestBytes := buf.Bytes()
+	if len(manifestBytes) > 0 && manifestBytes[0] == 0xEF && manifestBytes[1] == 0xBB && manifestBytes[2] == 0xBF {
+		manifestBytes = manifestBytes[3:] // Remove the BOM
+	}
+
+	var manifest ModManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		log.Error("fucked up unmarshaling manifest: ", "error", err, "manifest", buf.String())
+		return nil, err
+	}
+
+	log.Info("manifest: ", "manifest", manifest)
 
 	return &manifest, nil
 }
 
 // the second arg is BepInExDir, not used for now
 func (d *DataService) handleDependencies(manifest *ModManifest, _ string) error {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error("Recovered from panic:", "error", r)
-			// Return an empty slice on error
-			filteredListings = nil
-		}
-	}()
-
 	filteredDeps := d.filterDependencies(manifest.Dependencies)
 	depListings, err := d.getModListingsForDependencies(filteredDeps)
 	if err != nil {
@@ -393,12 +378,14 @@ func (d *DataService) handleDependencies(manifest *ModManifest, _ string) error 
 		wg.Add(1)
 		go func(listing SimplePackageListing) {
 			defer wg.Done()
-			d.mu.Lock()
-			if d.downloadedMods[listing.Name] {
-				d.mu.Unlock()
+
+			globalMu.RLock()
+			alreadyDownloaded := downloadedMods[listing.Name]
+			globalMu.RUnlock()
+
+			if alreadyDownloaded {
 				return
 			}
-			d.mu.Unlock()
 
 			_, err := d.Download(listing)
 			if err != nil {
@@ -467,33 +454,41 @@ func (d *DataService) getModListingsForDependencies(deps []string) ([]SimplePack
 }
 
 func (d *DataService) getModListingForDependency(dep string) (SimplePackageListing, error) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error("Recovered from panic:", "error", r)
-			// Return an empty slice on error
-			filteredListings = nil
-		}
-	}()
-
 	parts := strings.Split(dep, "-")
 	if len(parts) < 2 {
 		log.Errorf("invalid dependency format: %s", dep)
 		return SimplePackageListing{}, fmt.Errorf("invalid dependency format: %s", dep)
 	}
 
-	modName := strings.Join(parts[:len(parts)-1], "-")
 	version := parts[len(parts)-1]
+	modName := strings.Join(parts[:len(parts)-1], "-")
 
-	// Use the package map for faster lookup
-	listing, ok := packageMap[modName]
-	if !ok {
+	// Remove the author part from the modName for comparison
+	modNameWithoutAuthor := strings.Join(strings.Split(modName, "-")[1:], "-")
+
+	globalMu.RLock()
+	defer globalMu.RUnlock()
+
+	var matchingListing api.PackageListing
+	var found bool
+
+	for _, listing := range packageMap {
+		// Compare the mod name without the author part
+		if strings.EqualFold(listing.Name, modNameWithoutAuthor) {
+			matchingListing = listing
+			found = true
+			break
+		}
+	}
+
+	if !found {
 		log.Errorf("mod not found: %s", modName)
 		return SimplePackageListing{}, fmt.Errorf("mod not found: %s", modName)
 	}
 
 	// Find the requested version or use the latest
 	var targetVersion api.Version
-	for _, v := range listing.Versions {
+	for _, v := range matchingListing.Versions {
 		if v.VersionNumber == version {
 			targetVersion = v
 			break
@@ -501,28 +496,27 @@ func (d *DataService) getModListingForDependency(dep string) (SimplePackageListi
 	}
 	if targetVersion.VersionNumber == "" {
 		// If the specific version is not found, use the latest version
-		targetVersion = listing.Versions[0]
+		targetVersion = matchingListing.Versions[0]
 	}
 
 	return SimplePackageListing{
-		Name:        listing.Name,
+		Name:        matchingListing.Name,
 		Version:     targetVersion.VersionNumber,
 		Description: targetVersion.Description,
-		URL:         listing.PackageURL,
+		URL:         matchingListing.PackageURL,
 		DownloadURL: targetVersion.DownloadURL,
 		Icon:        targetVersion.Icon,
 	}, nil
 }
 
 // InitializePackageMap should be called once when initializing the DataService
-func (d *DataService) InitializePackageMap() {
-	packageMap = make(map[string]api.PackageListing, len(packageListings))
-	for _, listing := range packageListings {
-		packageMap[listing.Name] = listing
-	}
-	d.downloadedMods = make(map[string]bool)
-	d.downloadingMods = make(map[string]bool)
-}
+// func (d *DataService) InitializePackageMap() {
+// 	packageMap = make(map[string]api.PackageListing, len(packageListings))
+// 	for _, listing := range packageListings {
+// 		packageMap[listing.Name] = listing
+// 	}
+// 	downloadedMods = make(map[string]bool)
+// }
 
 func (d *DataService) IsBepInExInstalled(profile profiles.Profile) bool {
 	bepInExDir := filepath.Join(profile.Path, "BepInEx")
