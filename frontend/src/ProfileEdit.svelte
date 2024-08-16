@@ -12,9 +12,9 @@
 
     /**
      * @type {SimplePackageListing[]}
-     * 
+     *
      * Simplified version of PackageListing, required to avoid a stack overflow in the webview2 bridge
-     * 
+     *
      * This holds 10 currently displayed simple listings
      */
     export let listings = [];
@@ -27,12 +27,14 @@
     export let searchTermStore;
     let totalItemsFiltered = 0;
     let loadingText = "Downloading mod";
+    let topElement;
 
     const dispatch = createEventDispatcher();
 
     $: lastPage = Math.ceil(totalItems / itemsPerPage);
 
     function changePage(newPage) {
+        scrollToTop();
         dispatch("changePage", newPage);
     }
 
@@ -83,6 +85,11 @@
             return false;
         }
     }
+
+    function scrollToTop() {
+        console.log("scrollToTop", topElement);
+        topElement.scrollIntoView({ behavior: "smooth" });
+    }
 </script>
 
 <div id="profile-edit-page">
@@ -93,41 +100,78 @@
             style="max-width: 90%; margin: 0 auto; height: 70vh; overflow: auto"
         >
             <ul id="mods-list">
-                {#each listings as listing}
+                {#each listings as listing, i}
                     {#if listing.name != "" || listing.description != "" || listing.url != "" || listing.download_url != "" || listing.icon != ""}
                         <li>
-                            <article>
-                                <details>
-                                    <summary class="outline contrast">
-                                        <span class="listing-name">
-                                            <img
-                                                src={listing.icon}
-                                                alt="mod icon"
-                                                height="64"
-                                                width="64"
-                                                aria-busy="true"
-                                                on:load={(event) =>
-                                                    handleLoad(event)}
-                                            />
-                                            {listing.name}
-                                        </span>
-                                        <div class="button-group">
-                                            <button
-                                                on:click={() =>
-                                                    downloadMod(
-                                                        listing
-                                                    )}>Download</button
-                                            >
-                                            <button
-                                                on:click={() =>
-                                                    openWebsite(listing.url)}
-                                                >Open website &rarr;</button
-                                            >
-                                        </div>
-                                    </summary>
-                                    <p>{listing.description}</p>
-                                </details>
-                            </article>
+                            {#if i === 0}
+                                <article bind:this={topElement}>
+                                    <details>
+                                        <summary class="outline contrast">
+                                            <span class="listing-name">
+                                                <img
+                                                    src={listing.icon}
+                                                    alt="mod icon"
+                                                    height="64"
+                                                    width="64"
+                                                    aria-busy="true"
+                                                    on:load={(event) =>
+                                                        handleLoad(event)}
+                                                />
+                                                {listing.name}
+                                            </span>
+                                            <div class="button-group">
+                                                <button
+                                                    on:click={() =>
+                                                        downloadMod(listing)}
+                                                    >Download</button
+                                                >
+                                                <button
+                                                    on:click={() =>
+                                                        openWebsite(
+                                                            listing.url,
+                                                        )}
+                                                    >Open website &rarr;</button
+                                                >
+                                            </div>
+                                        </summary>
+                                        <p>{listing.description}</p>
+                                    </details>
+                                </article>
+                            {:else}
+                                <article>
+                                    <details>
+                                        <summary class="outline contrast">
+                                            <span class="listing-name">
+                                                <img
+                                                    src={listing.icon}
+                                                    alt="mod icon"
+                                                    height="64"
+                                                    width="64"
+                                                    aria-busy="true"
+                                                    on:load={(event) =>
+                                                        handleLoad(event)}
+                                                />
+                                                {listing.name}
+                                            </span>
+                                            <div class="button-group">
+                                                <button
+                                                    on:click={() =>
+                                                        downloadMod(listing)}
+                                                    >Download</button
+                                                >
+                                                <button
+                                                    on:click={() =>
+                                                        openWebsite(
+                                                            listing.url,
+                                                        )}
+                                                    >Open website &rarr;</button
+                                                >
+                                            </div>
+                                        </summary>
+                                        <p>{listing.description}</p>
+                                    </details>
+                                </article>
+                            {/if}
                         </li>
                     {/if}
                 {/each}

@@ -27,6 +27,7 @@ export function CreateProfile(name) {
 }
 
 /**
+ * overcomplicated, r2modman just extracts everything from the bepinex
  * @param {$models.SimplePackageListing} listing
  * @returns {Promise<string> & { cancel(): void }}
  */
@@ -97,6 +98,24 @@ export function GetTotalItems() {
  */
 export function GetTotalItemsFiltered() {
     let $resultPromise = /** @type {any} */($Call.ByID(591123730));
+    return $resultPromise;
+}
+
+/**
+ * InitializePackageMap should be called once when initializing the DataService
+ * @returns {Promise<void> & { cancel(): void }}
+ */
+export function InitializePackageMap() {
+    let $resultPromise = /** @type {any} */($Call.ByID(2403257157));
+    return $resultPromise;
+}
+
+/**
+ * @param {profiles$0.Profile} profile
+ * @returns {Promise<boolean> & { cancel(): void }}
+ */
+export function IsBepInExInstalled(profile) {
+    let $resultPromise = /** @type {any} */($Call.ByID(1631519816, profile));
     return $resultPromise;
 }
 

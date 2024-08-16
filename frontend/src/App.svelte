@@ -91,6 +91,10 @@
         }
     }
 
+    Events.On("createdProfile", async function(data) {
+        profiles = await GetProfiles();
+    })
+
     Events.On("selectedProfile", async function(data) {
         SelectedProfile = data
         console.log("SelectedProfile", SelectedProfile)
@@ -139,8 +143,9 @@
             return;
         }
 
-        if (newPage < 1 || newPage > Math.ceil(totalItems / itemsPerPage))
+        if (newPage < 1 || newPage > Math.ceil(totalItems / itemsPerPage)) {
             return;
+        }
 
         const direction = newPage > currentPage ? Direction.Next : Direction.Previous;
         
