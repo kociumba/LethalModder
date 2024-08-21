@@ -7,7 +7,7 @@
     } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { OpenURL } from "@wailsio/runtime/src/browser";
     import LoadingOverlay from "./LoadingOverlay.svelte";
-    import { Events } from "@wailsio/runtime";
+    import * as runtime from "@wailsio/runtime";
     import { SimplePackageListing } from "../bindings/github.com/kociumba/LethalModder/models";
 
     /**
@@ -53,7 +53,7 @@
         }
     }
 
-    Events.On("downloadComplete", () => {
+    runtime.Events.On("downloadComplete", () => {
         isLoading = false;
     });
 
@@ -91,6 +91,22 @@
         console.log("scrollToTop", topElement);
         topElement.scrollIntoView({ behavior: "smooth" });
     }
+
+    // Debug for showing package info in the frontend
+    function handleRightClick(event, listing) {
+        if (event.button === 2 && event.shiftKey) {
+            event.preventDefault();
+
+            /** @type {runtime.Dialogs.MessageDialogOptions} */
+            const options = {
+                Title: listing.name,
+                Message: JSON.stringify(listing, null, 2),
+                Buttons: [{ Label: "OK", IsCancel: false, IsDefault: true }],
+                Detached: false,
+            };
+            runtime.Dialogs.Info(options);
+        }
+    }
 </script>
 
 <div id="profile-edit-page">
@@ -103,7 +119,10 @@
             <ul id="mods-list">
                 {#each listings as listing, i}
                     {#if listing.name != "" || listing.description != "" || listing.url != "" || listing.download_url != "" || listing.icon != ""}
-                        <li>
+                        <li
+                            on:contextmenu={(event) =>
+                                handleRightClick(event, listing)}
+                        >
                             {#if i === 0}
                                 <article bind:this={topElement}>
                                     <details>

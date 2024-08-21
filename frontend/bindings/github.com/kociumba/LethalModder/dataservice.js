@@ -33,7 +33,7 @@ export function CreateProfile(name) {
 }
 
 /**
- * overcomplicated, r2modman just extracts everything from the bepinex
+ * Bid this struct to the main DataService
  * @param {$models.SimplePackageListing} listing
  * @returns {Promise<string> & { cancel(): void }}
  */
