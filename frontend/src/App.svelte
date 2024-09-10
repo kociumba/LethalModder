@@ -12,6 +12,7 @@
         GetProfiles,
     } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { Events } from "@wailsio/runtime"
+    import { createSwapy } from "swapy"
 
     let showProfileSelection = true;
     let currentPage = 1;

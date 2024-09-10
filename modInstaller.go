@@ -111,12 +111,10 @@ func (d *DownloadManager) downloadFile(url string, file *os.File) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-
 		app.Events.Emit(&application.WailsEvent{
 			Name: "downloadFailed",
 			Data: resp.Status,
 		})
-
 		log.Error("Failed to download file: " + resp.Status)
 		return fmt.Errorf("failed to download file: %s", resp.Status)
 	}
@@ -150,14 +148,6 @@ func (d *DownloadManager) downloadFile(url string, file *os.File) error {
 //
 // to get all the mods required by all of the mods.
 func (d *DownloadManager) extractAndParseManifest(src, dest, modName, modVersion string) (string, *ModManifest, InstallMethods, error) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error("Recovered from panic:", "error", r)
-			// Return an empty slice on error
-			filteredListings = nil
-		}
-	}()
-
 	r, err := zip.OpenReader(src)
 	if err != nil {
 		log.Error(err)
@@ -167,57 +157,94 @@ func (d *DownloadManager) extractAndParseManifest(src, dest, modName, modVersion
 
 	extractedDir := filepath.Join(dest, "plugins", fmt.Sprintf("%s_%s", modName, modVersion))
 	var manifestFile *zip.File
-
 	var installMethod InstallMethods
+
+	hasBepInEx := false
+	hasPlugins := false
+	hasPatchers := false
+	hasConfig := false
+	hasOtherBepInExDirs := false
 
 	for _, f := range r.File {
 		if strings.HasPrefix(f.Name, "BepInEx/") {
-			// Handle BepInEx structure
-			destPath := filepath.Join(dest, f.Name)
-			if err := d.extractFile(f, destPath); err != nil {
-				log.Error(err)
-				return "", nil, Plugin, err
+			hasBepInEx = true
+			parts := strings.Split(f.Name, "/")
+			if len(parts) > 2 {
+				switch parts[1] {
+				case "plugins":
+					hasPlugins = true
+				case "patchers":
+					hasPatchers = true
+				case "config":
+					hasConfig = true
+				default:
+					hasOtherBepInExDirs = true
+				}
 			}
-			extractedDir = filepath.Dir(destPath)
 		} else if filepath.Base(f.Name) == "manifest.json" {
 			manifestFile = f
-		} else {
-			// Handle root directory mods
-			destPath := filepath.Join(extractedDir, f.Name)
+		}
+	}
+
+	if hasBepInEx {
+		if hasPlugins && hasPatchers && hasConfig {
+			installMethod = BepInExSubDirs
+		} else if hasPlugins {
+			installMethod = Plugin
+		} else if hasPatchers {
+			installMethod = Patcher
+		} else if hasOtherBepInExDirs {
+			installMethod = BepInExSubDirs
+		}
+	} else {
+		installMethod = Plugin
+	}
+
+	for _, f := range r.File {
+		var destPath string
+		if hasBepInEx && strings.HasPrefix(f.Name, "BepInEx/") {
+			parts := strings.Split(f.Name, "/")
+			if len(parts) > 2 {
+				switch parts[1] {
+				case "plugins", "patchers", "config":
+					destPath = filepath.Join(dest, f.Name)
+				default:
+					destPath = filepath.Join(extractedDir, f.Name)
+				}
+			} else {
+				destPath = filepath.Join(extractedDir, f.Name)
+			}
+		} else if !hasBepInEx && filepath.Base(f.Name) != "manifest.json" {
+			destPath = filepath.Join(extractedDir, f.Name)
+		}
+
+		if destPath != "" {
 			if err := d.extractFile(f, destPath); err != nil {
 				log.Error(err)
-				return "", nil, Plugin, err
+				return "", nil, installMethod, err
 			}
-		}
-
-		if strings.Contains(f.Name, "BepInEx/plugins/") {
-			installMethod = Plugin
-		}
-
-		if strings.Contains(f.Name, "BepInEx/patchers/") {
-			installMethod = Patcher
-		}
-
-		if strings.Contains(f.Name, "BepInEx/") && !strings.Contains(f.Name, "BepInEx/plugins/") && !strings.Contains(f.Name, "BepInEx/patchers/") && !strings.Contains(f.Name, "BepInEx/config/") {
-			installMethod = BepInExSubDirs
 		}
 	}
 
 	if manifestFile == nil {
 		log.Error("manifest.json not found")
-		return "", nil, Plugin, fmt.Errorf("manifest.json not found")
+		return "", nil, installMethod, fmt.Errorf("manifest.json not found")
 	}
 
 	manifest, err := d.parseManifest(manifestFile)
 	if err != nil {
 		log.Error(err)
-		return "", nil, Plugin, err
+		return "", nil, installMethod, err
 	}
 
 	return extractedDir, manifest, installMethod, nil
 }
 
 func (d *DownloadManager) extractFile(f *zip.File, destPath string) error {
+	// See if dest starts with BepInEx and cut it if it is present
+	destPath = filepath.Clean(strings.TrimPrefix(destPath, "BepInEx/"))
+	log.Info(destPath)
+
 	if f.FileInfo().IsDir() {
 		return os.MkdirAll(destPath, os.ModePerm)
 	}
@@ -270,7 +297,7 @@ func (d *DownloadManager) parseManifest(file *zip.File) (*ModManifest, error) {
 
 	var manifest ModManifest
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
-		log.Error("fucked up unmarshaling manifest: ", "error", err, "manifest", buf.String())
+		log.Error("failed to unmarshal manifest: ", "error", err, "manifest", buf.String())
 		return nil, err
 	}
 
