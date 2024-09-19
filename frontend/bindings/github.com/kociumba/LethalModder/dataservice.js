@@ -33,9 +33,8 @@ export function CreateProfile(name) {
 }
 
 /**
- * Bid this struct to the main DataService
  * @param {$models.SimplePackageListing} listing
- * @returns {Promise<string> & { cancel(): void }}
+ * @returns {Promise<string | null> & { cancel(): void }}
  */
 export function Download(listing) {
     let $resultPromise = /** @type {any} */($Call.ByID(3764793721, listing));

@@ -1,6 +1,6 @@
 module github.com/kociumba/LethalModder
 
-go 1.22.6
+go 1.23
 
 require (
 	github.com/valyala/fastjson v1.6.4
