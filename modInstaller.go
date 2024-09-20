@@ -15,6 +15,7 @@ import (
 
 	"github.com/kociumba/LethalModder/api"
 	"github.com/kociumba/LethalModder/profiles"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 type InstallArgs struct {
@@ -65,7 +66,7 @@ func (d *DataService) Download(listing SimplePackageListing) (*string, error) {
 	}
 
 	// Install the mod
-	installer := &BepInExInstaller{}
+	installer := &BepInExModInstaller{}
 	installArgs := InstallArgs{
 		Mod:         listing,
 		PackagePath: extractedDir,
@@ -79,6 +80,11 @@ func (d *DataService) Download(listing SimplePackageListing) (*string, error) {
 	if err := handleDependencies(manifest, bepInExDir); err != nil {
 		return nil, fmt.Errorf("failed to handle dependencies: %w", err)
 	}
+
+	app.Events.Emit(&application.WailsEvent{
+		Name: "downloadComplete",
+		Data: extractedDir,
+	})
 
 	return &extractedDir, nil
 }
@@ -119,7 +125,16 @@ func extractAndParseManifest(src, dest, modName, modVersion string) (string, *Mo
 	var manifestFile *zip.File
 
 	for _, f := range r.File {
-		fpath := filepath.Join(extractedDir, f.Name)
+		// fpath := filepath.Join(extractedDir, f.Name)
+		// Determine the correct destination path
+		var fpath string
+		if strings.HasPrefix(f.Name, "BepInEx/") {
+			// If the file is already in a BepInEx subdirectory, maintain that structure
+			fpath = filepath.Join(dest, f.Name)
+		} else {
+			// Otherwise, place it in the mod-specific folder under plugins
+			fpath = filepath.Join(extractedDir, f.Name)
+		}
 
 		if !strings.HasPrefix(fpath, filepath.Clean(extractedDir)+string(os.PathSeparator)) {
 			return "", nil, fmt.Errorf("invalid file path")
@@ -284,47 +299,35 @@ func convertToSimplePackageListing(pl api.PackageListing, version string) Simple
 	}
 }
 
-type BepInExInstaller struct{}
+type BepInExModInstaller struct{}
 
-func (i *BepInExInstaller) Install(args InstallArgs) error {
-	mapping := findMapping(args.Mod.Name)
-	mappingRoot := ""
-	if mapping != nil {
-		mappingRoot = mapping.RootFolder
-	}
+func (i *BepInExModInstaller) Install(args InstallArgs) error {
+	modDir := filepath.Join(args.Profile.Path, "BepInEx", "plugins", fmt.Sprintf("%s_%s", args.Mod.Name, args.Mod.Version))
 
-	var bepInExRoot string
-	if mappingRoot != "" {
-		bepInExRoot = filepath.Join(args.PackagePath, mappingRoot)
-	} else {
-		bepInExRoot = args.PackagePath
-	}
-
-	items, err := os.ReadDir(bepInExRoot)
-	if err != nil {
-		return fmt.Errorf("failed to read directory: %w", err)
-	}
-
-	for _, item := range items {
-		if !contains(basePackageFiles, strings.ToLower(item.Name())) {
-			srcPath := filepath.Join(bepInExRoot, item.Name())
-			destPath := filepath.Join(args.Profile.Path, item.Name())
-
-			info, err := os.Stat(srcPath)
-			if err != nil {
-				return fmt.Errorf("failed to get file info: %w", err)
-			}
-
-			if info.IsDir() {
-				if err := copyFolder(srcPath, destPath); err != nil {
-					return fmt.Errorf("failed to copy folder: %w", err)
-				}
-			} else {
-				if err := copyFile(srcPath, destPath); err != nil {
-					return fmt.Errorf("failed to copy file: %w", err)
-				}
-			}
+	err := filepath.Walk(modDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
+
+		relPath, err := filepath.Rel(modDir, path)
+		if err != nil {
+			return err
+		}
+
+		// If the file is in a BepInEx subdirectory other than plugins, move it
+		if strings.HasPrefix(relPath, "BepInEx") && !strings.HasPrefix(relPath, filepath.Join("BepInEx", "plugins")) {
+			destPath := filepath.Join(args.Profile.Path, relPath)
+			if info.IsDir() {
+				return os.MkdirAll(destPath, info.Mode())
+			}
+			return os.Rename(path, destPath)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to organize mod files: %w", err)
 	}
 
 	return nil
