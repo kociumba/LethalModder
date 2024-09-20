@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -286,4 +287,58 @@ func (d *DataService) IsBepInExInstalled(profile profiles.Profile) bool {
 	bepInExDir := filepath.Join(profile.Path, "BepInEx")
 	_, err := os.Stat(bepInExDir)
 	return !os.IsNotExist(err)
+}
+
+// fails to actually lunch the game, this shit is fucked
+//
+// r2 somehow made their own little system with their own cli args and shit, idk if we can replicate it
+func (d *DataService) LaunchWithSelectedProfile() error {
+	// Generate game parameters
+	params, err := d.generateGameParameters(SelectProfile)
+	if err != nil {
+		return fmt.Errorf("failed to generate game parameters: %w", err)
+	}
+
+	// Prepare the Steam launch command
+	steamExe := filepath.Join(steamPath, "Steam.exe")
+	storeIdentifier := "1966720" // Steam App ID for Lethal Company
+
+	// Construct the full command
+	fullCmd := fmt.Sprintf(`"%s" -applaunch %s %s`,
+		steamExe,
+		storeIdentifier,
+		params,
+		// settings.LaunchParameters
+	)
+
+	// Execute the command
+	cmd := exec.Command("cmd", "/C", fullCmd)
+	err = cmd.Start()
+	if err != nil {
+		return fmt.Errorf("failed to start the game: %w", err)
+	}
+
+	return nil
+}
+
+func (d *DataService) generateGameParameters(profile profiles.Profile) (string, error) {
+	var params []string
+
+	// Add BepInEx parameters
+	params = append(params, "--doorstop-enable", "true")
+	params = append(params, "--doorstop-target", filepath.Join(profile.Path, "BepInEx", "core", "BepInEx.Preloader.dll"))
+
+	// Add the profile path as a parameter
+	params = append(params, "--r2profile", profile.Path)
+
+	// Add BepInEx configuration parameter
+	params = append(params, fmt.Sprintf("--doorstop-config=%s", filepath.Join(profile.Path, "BepInEx", "config")))
+
+	// Check for unstripped_corlib
+	if _, err := os.Stat(filepath.Join(profile.Path, "unstripped_corlib")); err == nil {
+		params = append(params, "--doorstop-mono-dll-search-path-override", filepath.Join(profile.Path, "unstripped_corlib"))
+	}
+
+	// Join all parameters into a single string
+	return strings.Join(params, " "), nil
 }

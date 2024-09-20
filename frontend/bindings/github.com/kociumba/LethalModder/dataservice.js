@@ -33,6 +33,7 @@ export function CreateProfile(name) {
 }
 
 /**
+ * BUG: Double extraction, when downloading a mod it extracts next to BepInEx/ but also correctly in BepInEx/plugins/
  * @param {$models.SimplePackageListing} listing
  * @returns {Promise<string | null> & { cancel(): void }}
  */
@@ -112,6 +113,17 @@ export function GetTotalItemsFiltered() {
  */
 export function IsBepInExInstalled(profile) {
     let $resultPromise = /** @type {any} */($Call.ByID(1631519816, profile));
+    return $resultPromise;
+}
+
+/**
+ * fails to actually lunch the game, this shit is fucked
+ * 
+ * r2 somehow made their own little system with their own cli args and shit, idk if we can replicate it
+ * @returns {Promise<void> & { cancel(): void }}
+ */
+export function LaunchWithSelectedProfile() {
+    let $resultPromise = /** @type {any} */($Call.ByID(2303630356));
     return $resultPromise;
 }
 

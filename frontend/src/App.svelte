@@ -10,6 +10,7 @@
         GetTotalItems, 
         GetIsLethalCompanyInstalled,
         GetProfiles,
+        LaunchWithSelectedProfile,
     } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { Events } from "@wailsio/runtime"
     import { createSwapy } from "swapy"
@@ -163,6 +164,10 @@
     function togglePage() {
         showProfileSelection = !showProfileSelection;
     }
+
+    async function lunchWithProfile() {
+        LaunchWithSelectedProfile()
+    }
 </script>
 
 <main class="container" style="overflow: hidden; height: 100vh">
@@ -181,6 +186,7 @@
         />
     {/if}
     <button on:click={togglePage}></button>
+    <button on:click={lunchWithProfile}>Lunch with the current profile</button>
 </main>
 
 <LethalCompanyWarningOverlay {isWarningVisible}/>
