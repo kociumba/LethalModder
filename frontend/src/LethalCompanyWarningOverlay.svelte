@@ -1,9 +1,9 @@
 <script>
-    export let isWarningVisible = false;
-    export let warningText = `
+    /** @type {{isWarningVisible?: boolean, warningText?: any}} */
+    let { isWarningVisible = false, warningText = `
     Lethal Company is not installed.
     Please install it through Steam.
-    `;
+    ` } = $props();
 </script>
 
 <div class="overlay" class:hidden={!isWarningVisible}>

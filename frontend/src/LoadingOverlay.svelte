@@ -1,6 +1,6 @@
 <script>
-    export let isLoading = false;
-    export let loadingText = "Loading";
+    /** @type {{isLoading?: boolean, loadingText?: string}} */
+    let { isLoading = false, loadingText = "Loading" } = $props();
 </script>
 
 <div class="overlay" class:hidden={!isLoading}>

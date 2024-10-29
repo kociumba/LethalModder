@@ -10,28 +10,25 @@
     import * as runtime from "@wailsio/runtime";
     import { SimplePackageListing } from "../bindings/github.com/kociumba/LethalModder/models";
 
-    /**
-     * @type {SimplePackageListing[]}
-     *
-     * Simplified version of PackageListing, required to avoid a stack overflow in the webview2 bridge
-     *
-     * This holds 10 currently displayed simple listings
-     */
-    export let listings = [];
-    export let currentPage = 1;
-    export let totalItems = 0;
-    export let itemsPerPage = 10;
-    let isLoading = false;
-    let searchTerm = "";
-    export let searchStore;
-    export let searchTermStore;
+    
+    let isLoading = $state(false);
+    let searchTerm = $state("");
+    /** @type {{listings?: SimplePackageListing[], currentPage?: number, totalItems?: number, itemsPerPage?: number, searchStore: any, searchTermStore: any}} */
+    let {
+        listings = [],
+        currentPage = 1,
+        totalItems = 0,
+        itemsPerPage = 10,
+        searchStore,
+        searchTermStore
+    } = $props();
     let totalItemsFiltered = 0;
-    let loadingText = "Downloading mod";
-    let topElement;
+    let loadingText = $state("Downloading mod");
+    let topElement = $state();
 
     const dispatch = createEventDispatcher();
 
-    $: lastPage = Math.ceil(totalItems / itemsPerPage);
+    let lastPage = $derived(Math.ceil(totalItems / itemsPerPage));
 
     function changePage(newPage) {
         scrollToTop();
@@ -120,7 +117,7 @@
                 {#each listings as listing, i}
                     {#if listing.name != "" || listing.description != "" || listing.url != "" || listing.download_url != "" || listing.icon != ""}
                         <li
-                            on:contextmenu={(event) =>
+                            oncontextmenu={(event) =>
                                 handleRightClick(event, listing)}
                         >
                             {#if i === 0}
@@ -134,19 +131,19 @@
                                                     height="64"
                                                     width="64"
                                                     aria-busy="true"
-                                                    on:load={(event) =>
+                                                    onload={(event) =>
                                                         handleLoad(event)}
                                                 />
                                                 {listing.name}
                                             </span>
                                             <div class="button-group">
                                                 <button
-                                                    on:click={() =>
+                                                    onclick={() =>
                                                         downloadMod(listing)}
                                                     >Download</button
                                                 >
                                                 <button
-                                                    on:click={() =>
+                                                    onclick={() =>
                                                         openWebsite(
                                                             listing.url,
                                                         )}
@@ -168,19 +165,19 @@
                                                     height="64"
                                                     width="64"
                                                     aria-busy="true"
-                                                    on:load={(event) =>
+                                                    onload={(event) =>
                                                         handleLoad(event)}
                                                 />
                                                 {listing.name}
                                             </span>
                                             <div class="button-group">
                                                 <button
-                                                    on:click={() =>
+                                                    onclick={() =>
                                                         downloadMod(listing)}
                                                     >Download</button
                                                 >
                                                 <button
-                                                    on:click={() =>
+                                                    onclick={() =>
                                                         openWebsite(
                                                             listing.url,
                                                         )}
@@ -199,20 +196,20 @@
         </div>
 
         <div class="pagination">
-            <button on:click={() => changePage(0)} disabled={currentPage === 1}
+            <button onclick={() => changePage(0)} disabled={currentPage === 1}
                 >&laquo;</button
             >
             <button
-                on:click={() => changePage(currentPage - 1)}
+                onclick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1}>&larr;</button
             >
             <span>{currentPage}</span>
             <button
-                on:click={() => changePage(currentPage + 1)}
+                onclick={() => changePage(currentPage + 1)}
                 disabled={currentPage === lastPage}>&rarr;</button
             >
             <button
-                on:click={() => changePage(lastPage)}
+                onclick={() => changePage(lastPage)}
                 disabled={currentPage === lastPage}>&raquo;</button
             >
         </div>
@@ -223,20 +220,20 @@
             aria-label="Text"
             id="search"
             bind:value={searchTerm}
-            on:input={() => {
+            oninput={() => {
                 if (searchTerm === "") {
                     turnOffSearch();
                 } else {
                     turnOnSearch();
                 }
             }}
-            on:change={() => {
+            onchange={() => {
                 dispatch("changePage", 0);
             }}
         />
     </div>
 
-    <button on:click={() => dispatch("backToProfiles")}>Back to Profiles</button
+    <button onclick={() => dispatch("backToProfiles")}>Back to Profiles</button
     >
 </div>
 

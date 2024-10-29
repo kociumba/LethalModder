@@ -5,13 +5,12 @@
     import { CreateProfile, GetProfiles, OpenProfileDirectory, SelectProfile } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { Profile } from "../bindings/github.com/kociumba/LethalModder/profiles";
 
-    /**
-     * @type {Profile[]}
-     */
-    export let profiles = [];
+    
+    /** @type {{profiles?: Profile[]}} */
+    let { profiles = $bindable([]) } = $props();
 
     let loadingText = "Initializing BepInEx";
-    let isLoading = false;
+    let isLoading = $state(false);
 
     const dispatch = createEventDispatcher();
 
@@ -40,8 +39,8 @@
                     <article role="group" class="grid">
                         <span class="listing-name">{profile.name}</span>
                         <div class="button-group">
-                            <button on:click={() => SelectProfile(profile)}>Select Profile</button>
-                            <button on:click={() => OpenProfileDirectory(profile)}>Open Profile Directory</button>
+                            <button onclick={() => SelectProfile(profile)}>Select Profile</button>
+                            <button onclick={() => OpenProfileDirectory(profile)}>Open Profile Directory</button>
                         </div>
                     </article>
                 </li>
@@ -49,7 +48,7 @@
         </ul>
     </div>
 
-    <button on:click={createProfile}>Create New Profile</button>
+    <button onclick={createProfile}>Create New Profile</button>
 </div>
 
 <LoadingOverlay {loadingText} {isLoading} />

@@ -15,14 +15,14 @@
     import { Events } from "@wailsio/runtime"
     import { createSwapy } from "swapy"
 
-    let showProfileSelection = true;
-    let currentPage = 1;
+    let showProfileSelection = $state(true);
+    let currentPage = $state(1);
     let currentIndex = 0;
     const itemsPerPage = 10;
-    let listings = [];
-    let totalItems = 0;
-    let isWarningVisible = false;
-    let profiles = [];
+    let listings = $state([]);
+    let totalItems = $state(0);
+    let isWarningVisible = $state(false);
+    let profiles = $state([]);
     let SelectedProfile
 
     export const searchStore = writable(false);
@@ -185,8 +185,8 @@
             on:backToProfiles={togglePage}
         />
     {/if}
-    <button on:click={togglePage}></button>
-    <button on:click={lunchWithProfile}>Lunch with the current profile</button>
+    <button onclick={togglePage}></button>
+    <button onclick={lunchWithProfile}>Lunch with the current profile</button>
 </main>
 
 <LethalCompanyWarningOverlay {isWarningVisible}/>
