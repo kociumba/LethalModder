@@ -45,7 +45,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '22'
 
     #   - run: go run github.com/tc-hib/go-winres@latest make --product-version=git-tag --file-version=git-tag
 
