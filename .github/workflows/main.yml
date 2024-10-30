@@ -71,7 +71,7 @@ jobs:
             wails3 task package:windows:amd64
 
       # Upload build assets
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Wails Build ${{runner.os}} ${{matrix.build.name}}
           path: |
