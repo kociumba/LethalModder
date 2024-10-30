@@ -92,13 +92,16 @@ var (
 		Height:                  720,
 		URL:                     "/",
 		Centered:                true,
-		BackgroundType:          application.BackgroundTypeSolid,
-		BackgroundColour:        application.RGBA{Red: 0, Green: 0, Blue: 0, Alpha: 255},
+		BackgroundType:          application.BackgroundTypeTranslucent,
+		BackgroundColour:        application.RGBA{Red: 19, Green: 23, Blue: 31, Alpha: 0},
 		FullscreenButtonEnabled: true,
 		ZoomControlEnabled:      true,
+		Frameless:               true,
 		Windows: application.WindowsWindow{
-			Theme:            application.Dark,
-			ResizeDebounceMS: 100,
+			Theme:                             application.Dark,
+			ResizeDebounceMS:                  100,
+			BackdropType:                      application.Acrylic,
+			DisableFramelessWindowDecorations: true,
 		},
 		ShouldClose: func(window *application.WebviewWindow) bool {
 			return true

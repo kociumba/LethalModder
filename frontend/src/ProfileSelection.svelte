@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import LoadingOverlay from "./LoadingOverlay.svelte";
-    import { Events } from "@wailsio/runtime";
+    import { Events, Dialogs } from "@wailsio/runtime";
     import { CreateProfile, GetProfiles, OpenProfileDirectory, SelectProfile } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { Profile } from "../bindings/github.com/kociumba/LethalModder/profiles";
 
@@ -33,7 +33,7 @@
     <h2>Select a Profile</h2>
 
     <div class="section" style="max-width: 90%; margin: 0 auto; height: 70vh; overflow: auto">
-        <ul>
+        <ul id="profile-list">
             {#each profiles as profile}
                 <li>
                     <article role="group" class="grid">

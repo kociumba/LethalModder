@@ -74,23 +74,23 @@ export class PackageListing {
         if (!("rating_score" in $$source)) {
             /**
              * @member
-             * @type {any}
+             * @type {number}
              */
-            this["rating_score"] = null;
+            this["rating_score"] = 0;
         }
         if (!("is_pinned" in $$source)) {
             /**
              * @member
-             * @type {any}
+             * @type {boolean}
              */
-            this["is_pinned"] = null;
+            this["is_pinned"] = false;
         }
         if (!("is_deprecated" in $$source)) {
             /**
              * @member
-             * @type {any}
+             * @type {boolean}
              */
-            this["is_deprecated"] = null;
+            this["is_deprecated"] = false;
         }
         if (!("has_nsfw_content" in $$source)) {
             /**
@@ -102,9 +102,9 @@ export class PackageListing {
         if (!("categories" in $$source)) {
             /**
              * @member
-             * @type {any}
+             * @type {string[]}
              */
-            this["categories"] = null;
+            this["categories"] = [];
         }
         if (!("versions" in $$source)) {
             /**
@@ -124,8 +124,12 @@ export class PackageListing {
      * @returns {PackageListing}
      */
     static createFrom($$source = {}) {
-        const $$createField13_0 = $$createType1;
+        const $$createField12_0 = $$createType0;
+        const $$createField13_0 = $$createType2;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("categories" in $$parsedSource) {
+            $$parsedSource["categories"] = $$createField12_0($$parsedSource["categories"]);
+        }
         if ("versions" in $$parsedSource) {
             $$parsedSource["versions"] = $$createField13_0($$parsedSource["versions"]);
         }
@@ -243,7 +247,7 @@ export class Version {
      * @returns {Version}
      */
     static createFrom($$source = {}) {
-        const $$createField1_0 = $$createType2;
+        const $$createField1_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("dependencies" in $$parsedSource) {
             $$parsedSource["dependencies"] = $$createField1_0($$parsedSource["dependencies"]);
@@ -253,6 +257,6 @@ export class Version {
 }
 
 // Private type creation functions
-const $$createType0 = Version.createFrom;
-const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = $Create.Array($Create.Any);
+const $$createType0 = $Create.Array($Create.Any);
+const $$createType1 = Version.createFrom;
+const $$createType2 = $Create.Array($$createType1);

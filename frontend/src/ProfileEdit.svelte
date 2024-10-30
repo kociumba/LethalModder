@@ -4,6 +4,7 @@
     import {
         Download,
         GetTotalItemsFiltered,
+        LaunchWithSelectedProfile,
     } from "../bindings/github.com/kociumba/LethalModder/dataservice";
     import { OpenURL } from "@wailsio/runtime/src/browser";
     import LoadingOverlay from "./LoadingOverlay.svelte";
@@ -233,8 +234,8 @@
         />
     </div>
 
-    <button onclick={() => dispatch("backToProfiles")}>Back to Profiles</button
-    >
+    <button onclick={() => dispatch("backToProfiles")}>Back to Profiles</button>
+    <button onclick={LaunchWithSelectedProfile}>Lunch with the current profile</button>
 </div>
 
 <LoadingOverlay {loadingText} {isLoading} />

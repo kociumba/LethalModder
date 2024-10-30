@@ -7,27 +7,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/log"
 )
 
 // PackageListing represents the structure of each package listing
 type PackageListing struct {
-	Name           string      `json:"name"`
-	FullName       string      `json:"full_name"`
-	Owner          string      `json:"owner"`
-	PackageURL     string      `json:"package_url"`
-	DonationLink   string      `json:"donation_link"`
-	DateCreated    string      `json:"date_created"`
-	DateUpdated    string      `json:"date_updated"`
-	UUID4          string      `json:"uuid4"`
-	RatingScore    interface{} `json:"rating_score"`
-	IsPinned       interface{} `json:"is_pinned"`
-	IsDeprecated   interface{} `json:"is_deprecated"`
-	HasNSFWContent bool        `json:"has_nsfw_content"`
-	Categories     interface{} `json:"categories"`
-	Versions       []Version   `json:"versions"` // this may have something to do with the error
+	Name           string    `json:"name"`
+	FullName       string    `json:"full_name"`
+	Owner          string    `json:"owner"`
+	PackageURL     string    `json:"package_url"`
+	DonationLink   string    `json:"donation_link"`
+	DateCreated    string    `json:"date_created"`
+	DateUpdated    string    `json:"date_updated"`
+	UUID4          string    `json:"uuid4"`
+	RatingScore    uint32    `json:"rating_score"`
+	IsPinned       bool      `json:"is_pinned"`
+	IsDeprecated   bool      `json:"is_deprecated"`
+	HasNSFWContent bool      `json:"has_nsfw_content"`
+	Categories     []string  `json:"categories"`
+	Versions       []Version `json:"versions"` // this may have something to do with the error
 }
 
 // Version represents the structure of a version listing
@@ -61,52 +61,6 @@ func (p *PackageListing) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (p PackageListing) GetRatingScore() (int, error) {
-	switch v := p.RatingScore.(type) {
-	case float64:
-		return int(v), nil
-	case string:
-		return strconv.Atoi(v)
-	default:
-		return 0, fmt.Errorf("unexpected type for RatingScore: %T", v)
-	}
-}
-
-func (p PackageListing) GetIsPinned() (bool, error) {
-	switch v := p.IsPinned.(type) {
-	case bool:
-		return v, nil
-	case string:
-		return strconv.ParseBool(v)
-	default:
-		return false, fmt.Errorf("unexpected type for IsPinned: %T", v)
-	}
-}
-
-func (p PackageListing) GetIsDeprecated() (bool, error) {
-	switch v := p.IsDeprecated.(type) {
-	case bool:
-		return v, nil
-	case string:
-		return strconv.ParseBool(v)
-	default:
-		return false, fmt.Errorf("unexpected type for IsDeprecated: %T", v)
-	}
-}
-
-func (p PackageListing) GetCategories() ([]string, error) {
-	switch v := p.Categories.(type) {
-	case []string:
-		return v, nil
-	case string:
-		var categories []string
-		err := json.Unmarshal([]byte(v), &categories)
-		return categories, err
-	default:
-		return nil, fmt.Errorf("unexpected type for Categories: %T", v)
-	}
-}
-
 func GetMods() ([]PackageListing, error) {
 	// resp, err := http.Get("https://thunderstore.io/api/v1/package/")
 	resp, err := http.Get("https://thunderstore.io/c/lethal-company/api/v1/package/")
@@ -124,4 +78,18 @@ func GetMods() ([]PackageListing, error) {
 	}
 
 	return packageListings, nil
+}
+
+func (p PackageListing) Latest() Version {
+	return p.Versions[0]
+}
+
+func (p PackageListing) IsModpack() bool {
+	for _, category := range p.Categories {
+		if strings.Contains(category, "Modpacks") {
+			return true
+		}
+	}
+
+	return false
 }

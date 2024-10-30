@@ -14,7 +14,7 @@
         "vite": "^5.4.4"
     },
     "dependencies": {
-        "@wailsio/runtime": "^3.0.0-alpha.26",
+        "@wailsio/runtime": "3.0.0-alpha.26",
         "swapy": "^0.2.1"
     }
 }

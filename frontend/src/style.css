@@ -1,20 +1,105 @@
+@import url("./redesign.css");
+
 * {
     scrollbar-width: thin;
     scrollbar-color: #f2f2f2 transparent;
 }
 
+:root {
+    --pico-background-color: rgba(19, 23, 31, 0.65) !important;
+}
+
+:where(:root) {
+    background-color: var(--pico-background-color);
+    background-image:
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(247 112 141 / 0.1) 0%,
+            transparent 70%
+        ),
+        radial-gradient(
+            circle at 80% 20%,
+            rgba(144 158 190 / 0.1) 0%,
+            transparent 70%
+        ),
+        radial-gradient(
+            circle at 60% 70%,
+            rgba(42 123 111 / 0.1) 0%,
+            transparent 60%
+        ),
+        radial-gradient(
+            circle at 10% 80%,
+            rgba(150 74 80 / 0.1) 0%,
+            transparent 60%
+        ),
+        /* url('/fluid.svg'), */
+        url('/noise.svg');
+    
+    /* Make backgrounds much larger than viewport */
+    background-size:
+        100% 100%,
+        200% 200%,
+        180% 180%,
+        180% 180%;
+    
+    /* Center the enlarged backgrounds */
+    background-position:
+        50% 50%,
+        50% 50%,
+        50% 50%,
+        50% 50%;
+    
+    background-repeat: no-repeat;
+    background-blend-mode: normal, normal, normal, normal, multiply;
+
+    /* Smoother animation with cubic-bezier */
+    animation: blob-move 120s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes blob-move {
+    0% {
+        background-position:
+            0% 0%,
+            100% 0%,
+            50% 100%,
+            0% 100%;
+    }
+    33% {
+        background-position:
+            30% 30%,
+            70% 30%,
+            70% 70%,
+            30% 70%;
+    }
+    66% {
+        background-position:
+            70% 30%,
+            30% 30%,
+            30% 70%,
+            70% 70%;
+    }
+    100% {
+        background-position:
+            0% 0%,
+            100% 0%,
+            50% 100%,
+            0% 100%;
+    }
+}
+
 *::-webkit-scrollbar {
-    width: 12px;
+    width: 8px;
 }
 
 *::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: #e0e3e7;
-    border-radius: 6px;
-    border: 3px solid transparent;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
 #mods-list {
@@ -45,7 +130,8 @@ summary {
 
 .button-group {
     display: flex;
-    gap: 0.5rem; /* Space between buttons */
+    gap: 0.5rem;
+    /* Space between buttons */
 }
 
 button {
@@ -65,4 +151,22 @@ article.grid {
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: 1rem;
+}
+
+.top-padding {
+    padding-top: 48px;
+}
+
+/* Modern button override */
+.button, button, [type="button"] {
+    background: rgb(225, 29, 97);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    transition: background 0.2s ease;
+}
+
+.button:hover, button:hover {
+    background: rgb(200, 25, 85);
+    transform: translateY(-1px);
 }

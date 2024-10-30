@@ -4,16 +4,17 @@
     import ProfileSelection from "./ProfileSelection.svelte";
     import ProfileEdit from "./ProfileEdit.svelte";
     import LethalCompanyWarningOverlay from "./LethalCompanyWarningOverlay.svelte";
-    import { 
-        Return10Simple, 
-        Return10WithSearch, 
-        GetTotalItems, 
+    import TitleBar from "./TitleBar.svelte";
+    import {
+        Return10Simple,
+        Return10WithSearch,
+        GetTotalItems,
         GetIsLethalCompanyInstalled,
         GetProfiles,
         LaunchWithSelectedProfile,
     } from "../bindings/github.com/kociumba/LethalModder/dataservice";
-    import { Events } from "@wailsio/runtime"
-    import { createSwapy } from "swapy"
+    import { Events } from "@wailsio/runtime";
+    import { createSwapy } from "swapy";
 
     let showProfileSelection = $state(true);
     let currentPage = $state(1);
@@ -23,14 +24,14 @@
     let totalItems = $state(0);
     let isWarningVisible = $state(false);
     let profiles = $state([]);
-    let SelectedProfile
+    let SelectedProfile;
 
     export const searchStore = writable(false);
     export const searchTermStore = writable("");
 
     const Direction = {
         Next: 0,
-        Previous: 1
+        Previous: 1,
     };
 
     onMount(async () => {
@@ -50,27 +51,31 @@
     }
 
     // Needed to get totalItems after they loaded
-    Events.On("totalItems", async function(data) {
-        totalItems = data
+    Events.On("totalItems", async function (data) {
+        totalItems = data;
         await fetchListings(Direction.Next);
-    })
+    });
 
-    Events.On("lethalCompanyWarning", async function(data) {
-        isWarningVisible = !data
-        console.log("isWarningVisible", isWarningVisible)
-    })
+    Events.On("lethalCompanyWarning", async function (data) {
+        isWarningVisible = !data;
+        console.log("isWarningVisible", isWarningVisible);
+    });
 
     async function fetchListings(direction) {
         try {
             let isSearching;
             let searchTerm;
-            
+
             // Subscribe to the stores to get their current values
-            searchStore.subscribe(value => isSearching = value)();
-            searchTermStore.subscribe(value => searchTerm = value)();
+            searchStore.subscribe((value) => (isSearching = value))();
+            searchTermStore.subscribe((value) => (searchTerm = value))();
 
             if (isSearching) {
-                listings = await Return10WithSearch(currentIndex, direction, searchTerm);
+                listings = await Return10WithSearch(
+                    currentIndex,
+                    direction,
+                    searchTerm,
+                );
             } else {
                 listings = await Return10Simple(currentIndex, direction);
             }
@@ -93,27 +98,31 @@
         }
     }
 
-    Events.On("createdProfile", async function(data) {
+    Events.On("createdProfile", async function (data) {
         profiles = await GetProfiles();
-    })
+    });
 
-    Events.On("selectedProfile", async function(data) {
-        SelectedProfile = data
-        console.log("SelectedProfile", SelectedProfile)
+    Events.On("selectedProfile", async function (data) {
+        SelectedProfile = data;
+        console.log("SelectedProfile", SelectedProfile);
         togglePage();
-    })
+    });
 
     async function fetchListingsManual(index, direction) {
         try {
             let isSearching;
             let searchTerm;
-            
+
             // Subscribe to the stores to get their current values
-            searchStore.subscribe(value => isSearching = value)();
-            searchTermStore.subscribe(value => searchTerm = value)();
+            searchStore.subscribe((value) => (isSearching = value))();
+            searchTermStore.subscribe((value) => (searchTerm = value))();
 
             if (isSearching) {
-                listings = await Return10WithSearch(index, direction, searchTerm);
+                listings = await Return10WithSearch(
+                    index,
+                    direction,
+                    searchTerm,
+                );
             } else {
                 listings = await Return10Simple(index, direction);
             }
@@ -149,16 +158,17 @@
             return;
         }
 
-        const direction = newPage > currentPage ? Direction.Next : Direction.Previous;
-        
+        const direction =
+            newPage > currentPage ? Direction.Next : Direction.Previous;
+
         if (direction === Direction.Previous) {
-            currentIndex = Math.max(0, currentIndex - (itemsPerPage));
+            currentIndex = Math.max(0, currentIndex - itemsPerPage);
         }
 
         await fetchListings(direction);
         currentPage = newPage;
 
-        console.log("isWarningVisible", isWarningVisible)
+        console.log("isWarningVisible", isWarningVisible);
     }
 
     function togglePage() {
@@ -166,27 +176,32 @@
     }
 
     async function lunchWithProfile() {
-        LaunchWithSelectedProfile()
+        LaunchWithSelectedProfile();
     }
 </script>
 
 <main class="container" style="overflow: hidden; height: 100vh">
+    <TitleBar />
     {#if showProfileSelection}
-        <ProfileSelection on:createProfile={togglePage} {profiles}/>
+        <div class="top-padding">
+            <ProfileSelection on:createProfile={togglePage} {profiles} />
+        </div>
     {:else}
-        <ProfileEdit
-            {listings}
-            {currentPage}
-            {totalItems}
-            {itemsPerPage}
-            {searchStore} 
-            {searchTermStore}
-            on:changePage={({ detail }) => changePage(detail)}
-            on:backToProfiles={togglePage}
-        />
+        <div class="top-padding">
+            <ProfileEdit
+                {listings}
+                {currentPage}
+                {totalItems}
+                {itemsPerPage}
+                {searchStore}
+                {searchTermStore}
+                on:changePage={({ detail }) => changePage(detail)}
+                on:backToProfiles={togglePage}
+            />
+        </div>
     {/if}
-    <button onclick={togglePage}></button>
-    <button onclick={lunchWithProfile}>Lunch with the current profile</button>
+    <!-- <button onclick={togglePage} aria-label="Toggle page"></button> -->
+
 </main>
 
-<LethalCompanyWarningOverlay {isWarningVisible}/>
+<LethalCompanyWarningOverlay {isWarningVisible} />
